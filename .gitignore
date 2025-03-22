@@ -2,3 +2,5 @@
 !dashboard/
 
 !.gitignore
+
+!pdf_parsers/
