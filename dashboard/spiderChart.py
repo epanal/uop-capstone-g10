@@ -21,10 +21,15 @@ def spider(
     Returns:
         fig (graph object): A spider chart of patient assessment scores
     """
-    
+
+    # Need the first value repeated at the end to complete the chart
+    df['WHO_2'] = df['WHO']
+    assessment_totals.append(assessment_totals[0])
+    cat_names.append(cat_names[0])
+
     # Initialize graph object
     fig = go.Figure()
-    
+
     # Add trace for the average assessment scores
     fig.add_trace(
         go.Scatterpolar(
@@ -44,7 +49,7 @@ def spider(
             hoverinfo="text",
         )
     )
-    
+
     # Add trace for the single patient scores
     fig.add_trace(
         go.Scatterpolar(
@@ -64,7 +69,7 @@ def spider(
             hoverinfo="text",
         )
     )
-    
+
     # Chart labels
     fig.update_layout(
         title=title,
