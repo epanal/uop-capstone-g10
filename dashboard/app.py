@@ -3,7 +3,7 @@ from dash import Dash, html, dash_table, dcc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from spiderTemplate import spider
+from spiderChart import spider
 
 
 ## Function to format date columns
@@ -15,7 +15,7 @@ def clean_dates(col):
 who = pd.read_csv('~\Downloads\Capstone\capstone\data\who_merged.csv')
 who['assessment_date'] = clean_dates(who['assessment_date'])
 who['score'] = who.iloc[:, -5:].sum(axis=1)
-who.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+who.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
 
 # GAD
@@ -27,21 +27,21 @@ gad['5. * Being so restless that it is too hard to sit still'] = gad['5. * Being
 gad.drop('5. * Being so restless that it’s hard to sit still', inplace=True, axis=1)
 
 gad['score'] = gad.iloc[:, -7:].sum(axis=1)
-gad.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+gad.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
 
 # PHQ
 phq = pd.read_csv('~\Downloads\Capstone\capstone\data\phq_merged.csv')
 phq['assessment_date'] = clean_dates(phq['assessment_date'])
 phq['score'] = phq.iloc[:, -9:].sum(axis=1)
-phq.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+phq.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
 
 # PCL
 pcl = pd.read_csv('~\Downloads\Capstone\capstone\data\ptsd_merged.csv')
 pcl['assessment_date'] = clean_dates(pcl['assessment_date'])
 pcl['score'] = pcl.iloc[:, -20:].sum(axis=1)
-pcl.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+pcl.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
 
 # DERS
@@ -53,10 +53,11 @@ ders = pd.read_csv('~\Downloads\Capstone\capstone\data\ders_merged.csv')
 ders['assessment_date'] = clean_dates(ders['assessment_date'])
 
 ders['score'] = ders.iloc[:, -36:].sum(axis=1)
-ders.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+ders.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
 # DERS2
 ders2 = pd.read_csv('~\Downloads\Capstone\capstone\data\ders2_merged.csv')
+ders2['assessment_date'] = clean_dates(ders2['assessment_date'])
 
 # reverese scored questions in DERS2 files need to be reformatted
 reverse_cols2 = ders2.loc[:, ders2.columns.str.split('.').str[0].isin(reversed_elements)].columns
@@ -64,23 +65,27 @@ mapping = {"'-1":1,"'-2":2,"'-3":3,"'-4":4,"'-5":5}
 ders2[reverse_cols2] = ders2[reverse_cols2].replace(mapping)
 
 ders2['score'] = ders2.iloc[:, -36:].sum(axis=1)
-ders2.sort_values(['group_identifier', 'assessment_date'], inplace=True)
+ders2.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
-# Calculating the mean assessment scores for each patient
-who_scores = who.groupby('group_identifier')['score'].mean()
-gad_scores = gad.groupby('group_identifier')['score'].mean()
-phq_scores = phq.groupby('group_identifier')['score'].mean()
-pcl_scores = pcl.groupby('group_identifier')['score'].mean()
-ders_scores = ders.groupby('group_identifier')['score'].mean()
-ders2_scores = ders2.groupby('group_identifier')['score'].mean()
+# Combining DERS files
+ders2.columns=ders.columns
+ders = pd.concat([ders,ders2])
+ders.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 
-scores = pd.DataFrame({'WHO':who_scores, 'GAD':gad_scores,
-                       'PHQ':phq_scores, 'PCL':pcl_scores,
-                       'DERS1':ders_scores, 'DERS2':ders2_scores})
+# Combine all assessment data to one dataframe
+cols = ['initial_group_identifier', 'assessment_date', 'score']
+assessments = ['WHO', 'GAD', 'PHQ', 'PCL', 'DERS']
+
+df = who[cols].merge(gad[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=('_WHO', '_GAD'))
+df = df.merge(phq[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_PHQ'))
+df = df.merge(pcl[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_PCL'))
+df = df.merge(ders[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_DERS'))
+df.columns = ['initial_group_identifier', 'assessment_date'] + assessments
+
+scores = df.groupby('initial_group_identifier')[assessments].mean()
 
 # Total possible score for each assessment
-totals = [25.0, 21.0, 27.0, 80.0, 180.0, 180.0]
-assessments = scores.columns
+totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 
 # Select a patient --NOTE: need to make this dynamic
 patient_id = '45f6c6e54bbf'
@@ -89,7 +94,6 @@ patient_id = '45f6c6e54bbf'
 radar_chart = spider(scores, totals,
                      assessments, patient_id,
                      'Assessment Scores for patient: ' + patient_id)
-
 
 # Initialize the app
 app = Dash()
