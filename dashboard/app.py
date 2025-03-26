@@ -4,9 +4,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from spiderChart import spider
+from lineChart import time_series
 
 
-## Function to format date columns
+# Function to format date columns
 def clean_dates(col):
     return pd.to_datetime(col.str.split(' ').str[0], format='mixed')
 
@@ -59,7 +60,7 @@ ders.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
 ders2 = pd.read_csv('~\Downloads\Capstone\capstone\data\ders2_merged.csv')
 ders2['assessment_date'] = clean_dates(ders2['assessment_date'])
 
-# reverese scored questions in DERS2 files need to be reformatted
+# reveres scored questions in DERS2 files need to be reformatted
 reverse_cols2 = ders2.loc[:, ders2.columns.str.split('.').str[0].isin(reversed_elements)].columns
 mapping = {"'-1":1,"'-2":2,"'-3":3,"'-4":4,"'-5":5}
 ders2[reverse_cols2] = ders2[reverse_cols2].replace(mapping)
@@ -93,15 +94,18 @@ patient_id = '45f6c6e54bbf'
 # Creating a radar chart of assessment scores for a single patient
 radar_chart = spider(scores, totals,
                      assessments, patient_id,
-                     'Assessment Scores for patient: ' + patient_id)
+                     'Assessment Scores for Patient: ' + patient_id)
+
+line_chart = time_series(df, 'WHO', patient_id)
 
 # Initialize the app
 app = Dash()
 
 # App layout
 app.layout = [
-    dash_table.DataTable(data=scores.reset_index().to_dict('records'), page_size=10),
-    dcc.Graph(figure=radar_chart)
+    dash_table.DataTable(data=df.to_dict('records'), page_size=10),
+    dcc.Graph(figure=radar_chart),
+    dcc.Graph(figure=line_chart)
 ]
 
 # Run the app
