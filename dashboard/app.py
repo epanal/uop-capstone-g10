@@ -1,113 +1,264 @@
-# Import packages
-from dash import Dash, html, dash_table, dcc
+from dash import Dash, html, dcc, Input, Output
+import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 from spiderChart import spider
 from lineChart import time_series
 
 
 # Function to format date columns
 def clean_dates(col):
-    return pd.to_datetime(col.str.split(' ').str[0], format='mixed')
+    return pd.to_datetime(col.str.split(" ").str[0], format="mixed")
 
-# Reading in data files and cleaning
+
+# Reading and cleaning data (same as before)
 # WHO
-who = pd.read_csv('~\Downloads\Capstone\capstone\data\who_merged.csv')
-who['assessment_date'] = clean_dates(who['assessment_date'])
-who['score'] = who.iloc[:, -5:].sum(axis=1)
-who.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
+who = pd.read_csv("data/who_merged.csv")
+who["assessment_date"] = clean_dates(who["assessment_date"])
+who["score"] = who.iloc[:, -5:].sum(axis=1)
+who.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # GAD
-gad = pd.read_csv('~\Downloads\Capstone\capstone\data\gad_merged.csv')
-gad['assessment_date'] = clean_dates(gad['assessment_date'])
-# combining duplicate column
-gad['5. * Being so restless that it is too hard to sit still'] = gad['5. * Being so restless that it is too hard to sit still'].combine_first(
-  gad['5. * Being so restless that it’s hard to sit still'])
-gad.drop('5. * Being so restless that it’s hard to sit still', inplace=True, axis=1)
-
-gad['score'] = gad.iloc[:, -7:].sum(axis=1)
-gad.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
+gad = pd.read_csv("data/gad_merged.csv")
+gad["assessment_date"] = clean_dates(gad["assessment_date"])
+gad["5. * Being so restless that it is too hard to sit still"] = gad[
+    "5. * Being so restless that it is too hard to sit still"
+].combine_first(gad["5. * Being so restless that it’s hard to sit still"])
+gad.drop("5. * Being so restless that it’s hard to sit still", inplace=True, axis=1)
+gad["score"] = gad.iloc[:, -7:].sum(axis=1)
+gad.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # PHQ
-phq = pd.read_csv('~\Downloads\Capstone\capstone\data\phq_merged.csv')
-phq['assessment_date'] = clean_dates(phq['assessment_date'])
-phq['score'] = phq.iloc[:, -9:].sum(axis=1)
-phq.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
+phq = pd.read_csv("data/phq_merged.csv")
+phq["assessment_date"] = clean_dates(phq["assessment_date"])
+phq["score"] = phq.iloc[:, -9:].sum(axis=1)
+phq.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # PCL
-pcl = pd.read_csv('~\Downloads\Capstone\capstone\data\ptsd_merged.csv')
-pcl['assessment_date'] = clean_dates(pcl['assessment_date'])
-pcl['score'] = pcl.iloc[:, -20:].sum(axis=1)
-pcl.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
+pcl = pd.read_csv("data/ptsd_merged.csv")
+pcl["assessment_date"] = clean_dates(pcl["assessment_date"])
+pcl["score"] = pcl.iloc[:, -20:].sum(axis=1)
+pcl.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # DERS
-# some questions in DERS have reverse scoring
-reversed = [1,2,6,7,8,10,17,20,22,24,34]
-reversed_elements = [str(x) for x in reversed]
+ders = pd.read_csv("data/ders_merged.csv")
+ders["assessment_date"] = clean_dates(ders["assessment_date"])
+ders["score"] = ders.iloc[:, -36:].sum(axis=1)
+ders.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
-ders = pd.read_csv('~\Downloads\Capstone\capstone\data\ders_merged.csv')
-ders['assessment_date'] = clean_dates(ders['assessment_date'])
+# Combine all assessment data into one dataframe
+cols = ["initial_group_identifier", "assessment_date", "score"]
+assessments = ["WHO", "GAD", "PHQ", "PCL", "DERS"]
+df = who[cols].merge(
+    gad[cols],
+    how="outer",
+    on=["initial_group_identifier", "assessment_date"],
+    suffixes=("_WHO", "_GAD"),
+)
+df = df.merge(
+    phq[cols],
+    how="outer",
+    on=["initial_group_identifier", "assessment_date"],
+    suffixes=(None, "_PHQ"),
+)
+df = df.merge(
+    pcl[cols],
+    how="outer",
+    on=["initial_group_identifier", "assessment_date"],
+    suffixes=(None, "_PCL"),
+)
+df = df.merge(
+    ders[cols],
+    how="outer",
+    on=["initial_group_identifier", "assessment_date"],
+    suffixes=(None, "_DERS"),
+)
+df.columns = ["initial_group_identifier", "assessment_date"] + assessments
 
-ders['score'] = ders.iloc[:, -36:].sum(axis=1)
-ders.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
-# DERS2
-ders2 = pd.read_csv('~\Downloads\Capstone\capstone\data\ders2_merged.csv')
-ders2['assessment_date'] = clean_dates(ders2['assessment_date'])
-
-# reveres scored questions in DERS2 files need to be reformatted
-reverse_cols2 = ders2.loc[:, ders2.columns.str.split('.').str[0].isin(reversed_elements)].columns
-mapping = {"'-1":1,"'-2":2,"'-3":3,"'-4":4,"'-5":5}
-ders2[reverse_cols2] = ders2[reverse_cols2].replace(mapping)
-
-ders2['score'] = ders2.iloc[:, -36:].sum(axis=1)
-ders2.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
-# Combining DERS files
-ders2.columns=ders.columns
-ders = pd.concat([ders,ders2])
-ders.sort_values(['initial_group_identifier', 'assessment_date'], inplace=True)
-
-# Combine all assessment data to one dataframe
-cols = ['initial_group_identifier', 'assessment_date', 'score']
-assessments = ['WHO', 'GAD', 'PHQ', 'PCL', 'DERS']
-
-df = who[cols].merge(gad[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=('_WHO', '_GAD'))
-df = df.merge(phq[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_PHQ'))
-df = df.merge(pcl[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_PCL'))
-df = df.merge(ders[cols], how='outer', on=['initial_group_identifier', 'assessment_date'], suffixes=(None, '_DERS'))
-df.columns = ['initial_group_identifier', 'assessment_date'] + assessments
-
-scores = df.groupby('initial_group_identifier')[assessments].mean()
+scores = df.groupby("initial_group_identifier")[assessments].mean()
 
 # Total possible score for each assessment
 totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 
-# Select a patient --NOTE: need to make this dynamic
-patient_id = '45f6c6e54bbf'
+# Initialize the app with Bootstrap theme
+app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 
-# Creating a radar chart of assessment scores for a single patient
-radar_chart = spider(scores, totals,
-                     assessments, patient_id,
-                     'Assessment Scores for Patient: ' + patient_id)
+# App layout with centered dropdowns and plots
+app.layout = dbc.Container(
+    [
+        html.Br(),
+        dbc.Row(
+            dbc.Col(
+                html.H2(
+                    "🩺 Patient Assessment Dashboard",
+                    className="text-center text-white",
+                ),
+                width=12,
+            )
+        ),
+        html.Div(
+            "Current Date: Friday, March 28, 2025", className="text-white text-center"
+        ),
+        html.Hr(),
+        dbc.Tabs(
+            [
+                # Spider Chart Tab
+                dbc.Tab(
+                    label="Spider Chart",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Patient:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="spider-patient-select",
+                                                options=[
+                                                    {"label": pid, "value": pid}
+                                                    for pid in scores.index
+                                                ],
+                                                value=scores.index[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Assessment:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="spider-assessment-select",
+                                                options=[
+                                                    {"label": name, "value": name}
+                                                    for name in assessments
+                                                ],
+                                                value=assessments[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        dcc.Graph(
+                                            id="spider-chart",
+                                            style={
+                                                "height": "70vh",
+                                                "width": "50%",
+                                                "margin": "auto",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                width=12,
+                            )
+                        ),
+                    ],
+                ),
+                # Line Chart Tab
+                dbc.Tab(
+                    label="Line Chart",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Patient:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="line-patient-select",
+                                                options=[
+                                                    {"label": pid, "value": pid}
+                                                    for pid in df[
+                                                        "initial_group_identifier"
+                                                    ].unique()
+                                                ],
+                                                value=df[
+                                                    "initial_group_identifier"
+                                                ].unique()[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Assessment:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="line-assessment-select",
+                                                options=[
+                                                    {"label": name, "value": name}
+                                                    for name in assessments
+                                                ],
+                                                value=assessments[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        dcc.Graph(
+                                            id="line-chart",
+                                            style={
+                                                "height": "70vh",
+                                                "width": "50%",
+                                                "margin": "auto",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                width=12,
+                            )
+                        ),
+                    ],
+                ),
+            ]
+        ),
+    ],
+    fluid=True,
+)
 
-line_chart = time_series(df, 'WHO', patient_id)
 
-# Initialize the app
-app = Dash()
+# Callbacks for Spider Chart
+@app.callback(
+    Output("spider-chart", "figure"),
+    [
+        Input("spider-patient-select", "value"),
+        Input("spider-assessment-select", "value"),
+    ],
+)
+def update_spider_chart(patient_id, assessment):
+    return spider(
+        scores,
+        totals,
+        assessments,
+        patient_id,
+        f"Assessment Scores for Patient: {patient_id}",
+    )
 
-# App layout
-app.layout = [
-    dash_table.DataTable(data=df.to_dict('records'), page_size=10),
-    dcc.Graph(figure=radar_chart),
-    dcc.Graph(figure=line_chart)
-]
+
+# Callbacks for Line Chart
+@app.callback(
+    Output("line-chart", "figure"),
+    [Input("line-patient-select", "value"), Input("line-assessment-select", "value")],
+)
+def update_line_chart(patient_id, assessment):
+    return time_series(df, assessment, patient_id)
+
 
 # Run the app
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
