@@ -1,11 +1,15 @@
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
 
-def spider(df, assessment_totals, cat_names, patient_id, title):
+def spider(
+    df, assessment_totals, cat_names, patient_id, title
+):
+
     """
-    Function to create a radar chart of assessment scores for a single patient.
+    Function to create a radar chart of assessment scores for a single patient
 
     Args:
         df (DataFrame): A dataframe of average scores for each assessment for each patient.
@@ -17,49 +21,64 @@ def spider(df, assessment_totals, cat_names, patient_id, title):
     Returns:
         fig (plotly.graph_objects.Figure): A spider chart of patient assessment scores.
     """
-    # Align df with cat_names to ensure matching lengths
-    df = df[cat_names]
 
-    # Add first value to end to complete circular chart
-    normalized_avg_scores = (df.mean() / assessment_totals).tolist()
-    normalized_avg_scores.append(normalized_avg_scores[0])
-
-    normalized_patient_scores = (df.loc[patient_id] / assessment_totals).tolist()
-    normalized_patient_scores.append(normalized_patient_scores[0])
-
-    categories = cat_names + [cat_names[0]]  # Repeat first category at end
+    # Need the first value repeated at the end to complete the chart
+    df['fill_in'] = df[cat_names[0]]
+    assessment_totals.append(assessment_totals[0])
+    cat_names.append(cat_names[0])
 
     # Initialize graph object
     fig = go.Figure()
 
-    # Add trace for average assessment scores
+    # Add trace for the average assessment scores
     fig.add_trace(
         go.Scatterpolar(
-            r=normalized_avg_scores,
-            theta=categories,
+            # Use normalized score for chart coordinates
+            r=df.mean()/assessment_totals,
+            theta=cat_names,
             fill="toself",
-            name="Average Scores",
-            hoverinfo="r+theta",
+            # line_color = , -- NOTE: Change later to approved color palette
+            name='Average Scores',
+            # Use raw score for hover value
+            hovertext=np.round(
+                df.mean().values.reshape(
+                    -1,
+                ),
+                1,
+            ),
+            hoverinfo="text",
         )
     )
 
-    # Add trace for single patient scores
+    # Add trace for the single patient scores
     fig.add_trace(
         go.Scatterpolar(
-            r=normalized_patient_scores,
-            theta=categories,
+            # Use normalized score for chart coordinates
+            r=df.loc[patient_id]/assessment_totals,
+            theta=cat_names,
             fill="toself",
-            name=f"Patient: {patient_id}",
-            hoverinfo="r+theta",
+            # line_color = , -- NOTE: Change later to approved color palette
+            name='Patient: ' + patient_id,
+            # Use raw score for hover value
+            hovertext=np.round(
+                df.loc[patient_id].values.reshape(
+                    -1,
+                ),
+                1,
+            ),
+            hoverinfo="text",
         )
     )
 
-    # Chart labels and layout
+    # Chart labels
     fig.update_layout(
         title=title,
-        polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+        polar=dict(radialaxis=dict(visible=False, range=[0, 1])),
         showlegend=True,
-        legend=dict(orientation="v", font_size=12, yanchor="top", xanchor="left"),
+        legend=dict(
+            orientation="v", font_size=12
+            , yanchor="top", xanchor="left"
+        ),
         template="plotly_dark",
     )
 
