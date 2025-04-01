@@ -10,15 +10,22 @@ def clean_dates(col):
     return pd.to_datetime(col.str.split(" ").str[0], format="mixed")
 
 
-# Reading and cleaning data (same as before)
-# WHO
+# Reading data
 who = pd.read_csv("data/who_merged.csv")
+gad = pd.read_csv("data/gad_merged.csv")
+phq = pd.read_csv("data/phq_merged.csv")
+pcl = pd.read_csv("data/ptsd_merged.csv")
+ders = pd.read_csv("data/ders_merged.csv")
+
+# Cleaning data (same as before)
+# WHO
+
 who["assessment_date"] = clean_dates(who["assessment_date"])
 who["score"] = who.iloc[:, -5:].sum(axis=1)
 who.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # GAD
-gad = pd.read_csv("data/gad_merged.csv")
+
 gad["assessment_date"] = clean_dates(gad["assessment_date"])
 gad["5. * Being so restless that it is too hard to sit still"] = gad[
     "5. * Being so restless that it is too hard to sit still"
@@ -28,19 +35,19 @@ gad["score"] = gad.iloc[:, -7:].sum(axis=1)
 gad.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # PHQ
-phq = pd.read_csv("data/phq_merged.csv")
+
 phq["assessment_date"] = clean_dates(phq["assessment_date"])
 phq["score"] = phq.iloc[:, -9:].sum(axis=1)
 phq.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # PCL
-pcl = pd.read_csv("data/ptsd_merged.csv")
+
 pcl["assessment_date"] = clean_dates(pcl["assessment_date"])
 pcl["score"] = pcl.iloc[:, -20:].sum(axis=1)
 pcl.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)
 
 # DERS
-ders = pd.read_csv("data/ders_merged.csv")
+
 ders["assessment_date"] = clean_dates(ders["assessment_date"])
 ders["score"] = ders.iloc[:, -36:].sum(axis=1)
 ders.sort_values(["initial_group_identifier", "assessment_date"], inplace=True)

@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -11,19 +12,18 @@ def spider(
     Function to create a radar chart of assessment scores for a single patient
 
     Args:
-        df (dataframe): A dataframe of average scores for each assessment for each patient
-        assessment_totals (list): A list of total possible scores for each assessment
-        cat_names (list): A list of the names of each assessment, should match the order and names of
-                            the columns in the dataframe, and match the order of the assessment_totals
-        patient_id (string): The target patient for the plot
-        title (string): The title for the plot
+        df (DataFrame): A dataframe of average scores for each assessment for each patient.
+        assessment_totals (list): A list of total possible scores for each assessment.
+        cat_names (list): A list of the names of each assessment.
+        patient_id (str): The target patient for the plot.
+        title (str): The title for the plot.
 
     Returns:
-        fig (graph object): A spider chart of patient assessment scores
+        fig (plotly.graph_objects.Figure): A spider chart of patient assessment scores.
     """
 
     # Need the first value repeated at the end to complete the chart
-    df['WHO_2'] = df['WHO']
+    df['fill_in'] = df[cat_names[0]]
     assessment_totals.append(assessment_totals[0])
     cat_names.append(cat_names[0])
 
@@ -78,7 +78,8 @@ def spider(
         legend=dict(
             orientation="v", font_size=12
             , yanchor="top", xanchor="left"
-        )
+        ),
+        template="plotly_dark",
     )
 
     return fig
