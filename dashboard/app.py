@@ -161,6 +161,112 @@ app.layout = dbc.Container(
                         ),
                     ],
                 ),
+                # Assessment Scores Table
+                dbc.Tab(
+                    label="Assessment Scores",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Patient:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="assessment-table-patient-select",
+                                                options=[
+                                                    {"label": pid, "value": pid}
+                                                    for pid in df[
+                                                        "initial_group_identifier"
+                                                    ].unique()
+                                                ],
+                                                value=df[
+                                                    "initial_group_identifier"
+                                                ].unique()[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Patient:",
+                                                className="text-white",
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        dash_table.DataTable(
+                                            id='assessment-scores',
+                                            data=df.to_dict('records'),
+                                            columns=[
+                                                {'name': 'Initial Group Identifier'
+                                                    , 'id': 'initial_group_identifier', 'type': 'text'},
+                                                {'name': 'Assessment Date'
+                                                    , 'id': 'assessment_date', 'type': 'datetime'},
+                                                {'name': 'WHO', 'id': 'WHO', 'type': 'numeric'},
+                                                {'name': 'GAD', 'id': 'GAD', 'type': 'numeric'},
+                                                {'name': 'PHQ', 'id': 'PHQ', 'type': 'numeric'},
+                                                {'name': 'PCL', 'id': 'PCL', 'type': 'numeric'},
+                                                {'name': 'DERS', 'id': 'DERS', 'type': 'numeric'},
+                                            ],
+                                            style_cell_conditional=[
+                                                {
+                                                    'if': {'column_id': c},
+                                                    'textAlign': 'left'
+                                                } for c in df.columns
+                                            ],
+                                            style_as_list_view=True,
+                                            editable=True,
+                                            style_filter={'backgroundColor': 'black'},
+                                            style_cell={'backgroundColor': 'black', 'color': 'white',
+                                                        'fontSize':16, 'font-family':'sans-serif'},
+                                            style_header={
+                                                'backgroundColor': 'rgb(30, 30, 30)',
+                                                'color': 'white'
+                                            },
+                                            style_data={
+                                                'backgroundColor': 'rgb(50, 50, 50)',
+                                                'color': 'white'
+                                            },
+                                            page_size=10,
+                                            style_data_conditional=(
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{{{}}} > {}'.format(col, value),
+                                                                'column_id': col
+                                                            },
+                                                            'backgroundColor': '#3D9970',
+                                                            'color': 'white'
+                                                        } for col, value in zip(df[assessments].quantile(0.1).index,
+                                                                                df[assessments].quantile(0.1).to_numpy())
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{{{}}} <= {}'.format(col, value),
+                                                                'column_id': col
+                                                            },
+                                                            'backgroundColor': '#FF4136',
+                                                            'color': 'white'
+                                                        } for col, value in zip(df[assessments].quantile(0.5).index,
+                                                                                df[assessments].quantile(0.5).to_numpy())
+                                                    ]
+                                                )
+                                        )
+                                    ),
+                                ],
+                                width=12,
+                            )
+                        ),
+                    ],
+                ),
                 # Spider Chart Tab
                 dbc.Tab(
                     label="Spider Chart",
@@ -299,6 +405,17 @@ def update_exam_scores(patient_id):
     return fig
 
 
+# Callbacks for Assessment Scores Table
+@app.callback(
+    Output("assessment-scores", "data"),
+    [Input("assessment-table-patient-select", "value")],
+)
+def update_data_table(patient_id):
+    table_data = df.copy()
+    table_data['assessment_date'] = table_data['assessment_date'].dt.strftime('%Y-%m-%d')
+    return table_data[table_data.initial_group_identifier == patient_id].to_dict('records')
+
+
 # Callbacks for Spider Chart
 @app.callback(
     Output("spider-chart", "figure"),
@@ -323,6 +440,8 @@ def update_spider_chart(patient_id):
 )
 def update_line_chart(patient_id, assessment):
     return time_series(df, assessment, patient_id)
+
+
 
 
 # Run the app
