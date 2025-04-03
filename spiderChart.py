@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from data import scores, assessments
+from data import df, scores, assessments, totals
 from dash.dependencies import Input, Output
 
 def spider(
@@ -26,9 +26,9 @@ def spider(
     """
 
     # Need the first value repeated at the end to complete the chart
-    df['fill_in'] = df[cat_names[0]]
-    assessment_totals.append(assessment_totals[0])
-    cat_names.append(cat_names[0])
+    assessment_total = assessment_totals + [assessment_totals[0]]
+    cat_name = cat_names + [cat_names[0]]
+    df['fill_in'] = df[cat_name[0]]
 
     # Initialize graph object
     fig = go.Figure()
@@ -37,8 +37,8 @@ def spider(
     fig.add_trace(
         go.Scatterpolar(
             # Use normalized score for chart coordinates
-            r=df.mean()/assessment_totals,
-            theta=cat_names,
+            r=df.mean()/assessment_total,
+            theta=cat_name,
             fill="toself",
             # line_color = , -- NOTE: Change later to approved color palette
             name='Average Scores',
@@ -57,8 +57,8 @@ def spider(
     fig.add_trace(
         go.Scatterpolar(
             # Use normalized score for chart coordinates
-            r=df.loc[patient_id]/assessment_totals,
-            theta=cat_names,
+            r=df.loc[patient_id]/assessment_total,
+            theta=cat_name,
             fill="toself",
             # line_color = , -- NOTE: Change later to approved color palette
             name='Patient: ' + patient_id,
@@ -110,21 +110,6 @@ spider_layout = dbc.Tab(
                         style={"width": "50%", "margin": "auto"},
                     ),
                     html.Div(
-                        [
-                            html.Label("Select Assessment:", className="text-white"),
-                            dcc.Dropdown(
-                                id="spider-assessment-select",
-                                options=[
-                                    {"label": name, "value": name}
-                                    for name in assessments
-                                ],
-                                value=assessments[0],
-                                clearable=False,
-                            ),
-                        ],
-                        style={"width": "50%", "margin": "auto"},
-                    ),
-                    html.Div(
                         dcc.Graph(
                             id="spider-chart",
                             style={
@@ -144,14 +129,11 @@ spider_layout = dbc.Tab(
 # Callbacks for Spider Chart
 def spider_callback(app):
     @app.callback(
-        Output("Spider Chart", "figure"),
-        [
-            Input("spider-patient-select", "value"),
-            Input("spider-assessment-select", "value"),
-        ],
+        Output("spider-chart", "figure"),
+        Input("spider-patient-select", "value")
     )
 
-    def update_spider_chart(patient_id, assessments):
+    def update_spider_chart(patient_id):
         return spider(
             scores,
             totals,

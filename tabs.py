@@ -28,15 +28,11 @@ app.layout = dbc.Container(
         html.Hr(),
         dbc.Tabs(
             [
-            dbc.Tab(label="Radar Chart", children=[
-                spider_layout
-                ]),
-            dbc.Tab(label="Line Chart", children=[
-                line_layout
-                ]),
+                    dbc.Tab(label ="Spider Chart", children=[spider_layout]),
+                dbc.Tab(label ="Line Chart", children=[line_layout]),
             ],
         id="tabs",
-        active_tab="Radar Chart",
+        active_tab=None,
         ),
         html.Div(id="tab-content", className="p-4"),
     ]
@@ -45,17 +41,7 @@ app.layout = dbc.Container(
 spider_callback(app)
 line_callback(app)
 
-@app.callback(
-    Output("tab-content", "children"),
-    Input("tabs", "active_tab")
-)
 
-def render_tab_content(active_tab):
-    if active_tab == "Radar Chart":
-        return spider_callback(app)
-    elif active_tab == "Line Chart":
-        return line_callback(app)
-    return html.Div("Choose a tab to read")
 
 # Run the app
 if __name__ == "__main__":

@@ -141,7 +141,7 @@ line_layout = dbc.Tab(
 # Callbacks for Line Chart
 def line_callback(app):
     @app.callback(
-        Output("Line Chart", "figure"),
+        Output("line-chart", "figure"),
         [Input("line-patient-select", "value"), Input("line-assessment-select", "value")],
     )
 
