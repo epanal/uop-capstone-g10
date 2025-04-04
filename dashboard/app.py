@@ -221,7 +221,6 @@ app.layout = dbc.Container(
                                                     'textAlign': 'left'
                                                 } for c in df.columns
                                             ],
-                                            style_as_list_view=True,
                                             editable=True,
                                             style_filter={'backgroundColor': 'black'},
                                             style_cell={'backgroundColor': 'black', 'color': 'white',
@@ -239,27 +238,28 @@ app.layout = dbc.Container(
                                                     [
                                                         {
                                                             'if': {
-                                                                'filter_query': '{{{}}} > {}'.format(col, value),
-                                                                'column_id': col
-                                                            },
-                                                            'backgroundColor': '#3D9970',
-                                                            'color': 'white'
-                                                        } for col, value in zip(df[assessments].quantile(0.1).index,
-                                                                                df[assessments].quantile(0.1).to_numpy())
-                                                    ] +
-                                                    [
-                                                        {
-                                                            'if': {
-                                                                'filter_query': '{{{}}} <= {}'.format(col, value),
+                                                                'filter_query': '0 < {{{}}} < {}'.format(col, value),
                                                                 'column_id': col
                                                             },
                                                             'backgroundColor': '#FF4136',
                                                             'color': 'white'
                                                         } for col, value in zip(df[assessments].quantile(0.5).index,
                                                                                 df[assessments].quantile(0.5).to_numpy())
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{{{}}} >= {}'.format(col, value),
+                                                                'column_id': col
+                                                            },
+                                                            'backgroundColor': '#3D9970',
+                                                            'color': 'white'
+                                                        } for col, value in zip(df[assessments].quantile(0.5).index,
+                                                                                df[assessments].quantile(0.5).to_numpy())
                                                     ]
                                                 )
-                                        )
+                                        ),
+                                        style={"width": "50%", "margin": "auto"},
                                     ),
                                 ],
                                 width=12,
