@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 from spiderChart import spider
 from lineChart import time_series
+from wordCloud import generate_wordcloud
 from bps_charts import generate_bps_figure, generate_sunburst_chart
 from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
 import json
@@ -14,6 +15,7 @@ import os
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 data_directory = config['data_directory']
+
 
 # Function to format date columns
 def clean_dates(col):
@@ -77,6 +79,11 @@ bps_column_mapping = {
 }
 bps_df = bps.rename(columns=bps_column_mapping)
 
+all_internal_motivation = " ".join(bps_df['int_motivation'].dropna())
+all_external_motivation = " ".join(bps_df['ext_motivation'].dropna())
+internal_wc = generate_wordcloud(all_internal_motivation, "Internal Motivation", "Blues")
+external_wc = generate_wordcloud(all_external_motivation, "External Motivation", "Oranges")
+
 # df for rows where use_flag = 1
 used_substances = sub_history[sub_history['use_flag'] == 1]
 
@@ -96,7 +103,7 @@ substance_totals['percentage'] = (substance_totals['count'] / total_patients) * 
 # pattern-level percentages (outer circle)
 used_substances_grouped['percentage'] = (used_substances_grouped['count'] / total_patients) * 100
 # Generate the Sunburst figure
-sunburst_fig = generate_sunburst_chart(used_substances_grouped,total_patients)
+sunburst_fig = generate_sunburst_chart(used_substances_grouped, total_patients)
 
 # Combine all industry standard assessment data into one dataframe
 cols = ["initial_group_identifier", "assessment_date", "score"]
@@ -165,46 +172,28 @@ app.layout = dbc.Container(
                     tab_id="tab-0",
                     children=[
                         html.Br(),
-                        dbc.Row(
-                            dbc.Col(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Select Patient:",
-                                                className="text-white",
-                                            ),
-                                            dcc.Dropdown(
-                                                id="table-patient-select",
-                                                options=[
-                                                    {"label": pid, "value": pid}
-                                                    for pid in scores.index
-                                                ],
-                                                value=scores.index[0],
-                                                clearable=False,
-                                            ),
-                                        ],
-                                        style={"width": "50%", "margin": "auto"},
-                                    ),
-                                    html.Div(
-                                        dcc.Graph(
-                                            id="exam-scores",
-                                            style={
-                                                "height": "70vh",
-                                                "width": "80%",
-                                                "margin": "auto",
-                                            },
-                                        ),
-                                    ),
-                                ],
-                                width=12,
-                            )
+                        html.Div(
+                            [
+                                html.H4("Patient Motivation Word Clouds",
+                                        className="text-white bg-dark p-2 rounded",
+                                        style={'textAlign': 'center'})
+                            ], style={"width": "50%", "margin": "auto"},
                         ),
+                        dbc.Row([
+                            dbc.Col([
+                                html.Img(src=f"data:image/png;base64,{internal_wc}",
+                                         style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
+                            ], width={"size": 5}, align="center"),
+                            dbc.Col([
+                                html.Img(src=f"data:image/png;base64,{external_wc}",
+                                         style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
+                            ], width={"size": 5}, align="center")
+                        ], align="center", justify="center")
                     ],
                 ),
                 # Assessment Scores Table
                 dbc.Tab(
-                    label="Assessment Scores",
+                    label="🔢 Assessment Scores",
                     tab_id="tab-1",
                     children=[
                         html.Br(),
@@ -266,7 +255,7 @@ app.layout = dbc.Container(
                                             editable=True,
                                             style_filter={'backgroundColor': 'black'},
                                             style_cell={'backgroundColor': 'black', 'color': 'white',
-                                                        'fontSize':16, 'font-family':'sans-serif'},
+                                                        'fontSize': 16, 'font-family': 'sans-serif'},
                                             style_header={
                                                 'backgroundColor': 'rgb(30, 30, 30)',
                                                 'color': 'white'
@@ -286,7 +275,8 @@ app.layout = dbc.Container(
                                                             'backgroundColor': '#FF4136',
                                                             'color': 'white'
                                                         } for col, value in zip(df[assessments].quantile(0.5).index,
-                                                                                df[assessments].quantile(0.5).to_numpy())
+                                                                                df[assessments].quantile(
+                                                                                    0.5).to_numpy())
                                                     ] +
                                                     [
                                                         {
@@ -297,9 +287,10 @@ app.layout = dbc.Container(
                                                             'backgroundColor': '#3D9970',
                                                             'color': 'white'
                                                         } for col, value in zip(df[assessments].quantile(0.5).index,
-                                                                                df[assessments].quantile(0.5).to_numpy())
+                                                                                df[assessments].quantile(
+                                                                                    0.5).to_numpy())
                                                     ]
-                                                )
+                                            )
                                         ),
                                         style={"width": "50%", "margin": "auto"},
                                     ),
@@ -311,7 +302,7 @@ app.layout = dbc.Container(
                 ),
                 # Spider Chart Tab
                 dbc.Tab(
-                    label="Spider Chart",
+                    label="🕸️ Spider Chart",
                     tab_id="tab-2",
                     children=[
                         html.Br(),
@@ -354,7 +345,7 @@ app.layout = dbc.Container(
                 ),
                 # Line Chart Tab
                 dbc.Tab(
-                    label="Line Chart",
+                    label="📈 Line Chart",
                     tab_id="tab-3",
                     children=[
                         html.Br(),
@@ -419,56 +410,56 @@ app.layout = dbc.Container(
                 ),
                 # Biopsychosocial Assessment Tab
                 dbc.Tab(
-                label="📈 Biopsychosocial Assessment",
-                tab_id="tab-4",
-                children=[
-                    html.Br(),
-                    dbc.Row(
-                        dbc.Col(
-                            [
-                                # Sunburst chart
-                                html.Div(  # Wrap in a div for consistency with other tabs
-                                    dcc.Graph(
-                                        id="sunburst-chart",
-                                        figure=sunburst_fig,
-                                        style={
-                                            "height": "70vh",
-                                            "width": "50%",  # Same as spider and line charts
-                                            "margin": "auto",
-                                            "display": "block",
-                                        },
+                    label="📈 Biopsychosocial Assessment",
+                    tab_id="tab-4",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    # Sunburst chart
+                                    html.Div(  # Wrap in a div for consistency with other tabs
+                                        dcc.Graph(
+                                            id="sunburst-chart",
+                                            figure=sunburst_fig,
+                                            style={
+                                                "height": "70vh",
+                                                "width": "50%",  # Same as spider and line charts
+                                                "margin": "auto",
+                                                "display": "block",
+                                            },
+                                        ),
+                                        style={"width": "50%", "margin": "auto"},  # Match dropdown container
                                     ),
-                                    style={"width": "50%", "margin": "auto"},  # Match dropdown container
-                                ),
-                                # Patient filter dropdown
-                                html.Div(
-                                    [
-                                        html.Label(
-                                            "Select Patient:",
-                                            className="text-white",
-                                        ),
-                                        dcc.Dropdown(
-                                            id="bps-patient-dropdown",
-                                            options=[
-                                                {"label": pid, "value": pid}
-                                                for pid in bps_df["group_identifier"].unique()
-                                            ],
-                                            value=bps_df["group_identifier"].iloc[0],
-                                            clearable=False,
-                                        ),
-                                    ],
-                                    style={"width": "50%", "margin": "auto"},
-                                ),
-                                html.Div(
-                                    id="bps-content",
-                                    style={"width": "50%", "margin": "auto", "margin-top": "20px"},
-                                ),
-                            ],
-                            width=12,
-                        )
-                    ),
-                ],
-            ),
+                                    # Patient filter dropdown
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Patient:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="bps-patient-dropdown",
+                                                options=[
+                                                    {"label": pid, "value": pid}
+                                                    for pid in bps_df["group_identifier"].unique()
+                                                ],
+                                                value=bps_df["group_identifier"].iloc[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        id="bps-content",
+                                        style={"width": "50%", "margin": "auto", "margin-top": "20px"},
+                                    ),
+                                ],
+                                width=12,
+                            )
+                        ),
+                    ],
+                ),
                 # PHP Daily Assessments
                 dbc.Tab(
                     label="📊 PHP Daily Assessments",
@@ -536,29 +527,18 @@ app.layout = dbc.Container(
     fluid=True,
 )
 
+
 # Callbacks for title page
-@app.callback(
-    Output("exam-scores", "figure"),
-    [
-        Input("table-patient-select", "value")
-    ],
-)
-def update_exam_scores(patient_id):
-    table_data = df.copy()
-    table_data['assessment_date'] = table_data['assessment_date'].dt.strftime('%Y-%m-%d')
-    fig = go.Figure(data=[go.Table(
-        header=dict(values=["Initial Group Identifier", "Assessment Date"] + assessments,
-                    line_color='darkslategray',
-                    fill_color='paleturquoise',
-                    align='left'),
-        cells=dict(values=table_data[
-            table_data.initial_group_identifier == patient_id
-            ].transpose().values.tolist(),
-                   line_color='darkslategray',
-                   fill_color='lavender',
-                   align='right'))
-    ])
-    return fig
+# @app.callback(
+#     Output("word-cloud", "figure"),
+#     [Input(None, None)]
+# )
+# def update_word_cloud():
+#     all_internal_motivation = " ".join(bps_df['int_motivation'].dropna())
+#     all_external_motivation = " ".join(bps_df['ext_motivation'].dropna())
+#     internal_wc = generate_wordcloud(all_internal_motivation, "Internal Motivation", "Blues")
+#     external_wc = generate_wordcloud(all_external_motivation, "External Motivation", "Oranges")
+#     return
 
 
 # Callbacks for Assessment Scores Table
@@ -597,6 +577,7 @@ def update_spider_chart(patient_id):
 def update_line_chart(patient_id, assessment):
     return time_series(df, assessment, patient_id)
 
+
 # Callback for BPS Chart
 @app.callback(
     Output('bps-content', 'children'),
@@ -605,8 +586,9 @@ def update_line_chart(patient_id, assessment):
 def update_bps_content(patient_id):
     # Filter the patient data for BPS
     filtered_df = bps_df[bps_df['group_identifier'] == patient_id]
-    patient_info = filtered_df[['group_identifier', 'age', 'int_motivation', 'ext_motivation']].drop_duplicates().iloc[0]
-    
+    patient_info = filtered_df[['group_identifier', 'age', 'int_motivation', 'ext_motivation']].drop_duplicates().iloc[
+        0]
+
     # Biopsychosocial aggregate and individual scores
     bps_cols = [col for col in bps_column_mapping.values() if col != "Total"]
     bps_aggregates = bps_df[bps_cols].agg(['mean', 'median']).transpose()
@@ -619,9 +601,9 @@ def update_bps_content(patient_id):
 
     # Filter sub_history for the selected patient and use_flag == 1
     filtered_sub_history = sub_history[
-        (sub_history['group_identifier'] == patient_id) & 
+        (sub_history['group_identifier'] == patient_id) &
         (sub_history['use_flag'] == 1)
-    ]
+        ]
 
     # Define columns to display (exclude index and 'pattern_of_use', include 'pattern_of_use_consolidated')
     display_columns = [col for col in filtered_sub_history.columns if col not in ['pattern_of_use']]
@@ -655,7 +637,8 @@ def update_bps_content(patient_id):
             sort_action='native',  # Enable sorting
         )
     else:
-        sub_history_table = html.P("No substance use history (use_flag=1) available for this patient.", className="text-white")
+        sub_history_table = html.P("No substance use history (use_flag=1) available for this patient.",
+                                   className="text-white")
 
     return html.Div([
         html.H4("Patient Overview", className="text-white bg-dark p-2 rounded"),
@@ -673,6 +656,7 @@ def update_bps_content(patient_id):
         sub_history_table
     ])
 
+
 @app.callback(
     [Output("php-assessment-content", "children"),
      Output("php-wordcloud-content", "children")],
@@ -682,52 +666,55 @@ def update_bps_content(patient_id):
 def update_php_assessment(selected_patient_id, category):
     # Based on the category selection, call the appropriate functions.
     if category == "Moods":
-        fig = sparkline_figure(php_daily, selected_patient_id,'moods')
+        fig = sparkline_figure(php_daily, selected_patient_id, 'moods')
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'mood')
         wordcloud_component = html.Div(
             [
                 html.H4("Patient's common words:", className="text-white text-center", style={'marginBottom': '50px'}),
-                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
             style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
         )
     elif category == "Supports":
-        fig = sparkline_figure(php_daily, selected_patient_id,'supports') 
-        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id,'support')  
+        fig = sparkline_figure(php_daily, selected_patient_id, 'supports')
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'support')
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's support keywords:", className="text-white text-center", style={'marginBottom': '50px'}),
-                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+                html.H4("Patient's support keywords:", className="text-white text-center",
+                        style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
             style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
         )
     elif category == "Skills":
-        fig = sparkline_figure(php_daily, selected_patient_id,'skills') 
-        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id,'skill') 
+        fig = sparkline_figure(php_daily, selected_patient_id, 'skills')
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'skill')
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's skills keywords:", className="text-white text-center", style={'marginBottom': '50px'}),
-                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+                html.H4("Patient's skills keywords:", className="text-white text-center",
+                        style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
             style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
         )
     elif category == "Craving":
-        fig = craving_line_chart(php_daily, selected_patient_id)  
+        fig = craving_line_chart(php_daily, selected_patient_id)
         wordcloud_component = html.Div()  # no wordcloud for cravings
     else:
         # Fallback to moods if unexpected input occurs
-        fig = sparkline_figure(php_daily, selected_patient_id,'moods')
+        fig = sparkline_figure(php_daily, selected_patient_id, 'moods')
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id)
         wordcloud_component = html.Div(
             [
                 html.H4("Patient's common words:", className="text-white text-center", style={'marginBottom': '50px'}),
-                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
             style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
         )
-    
+
     assessment_graph = dcc.Graph(figure=fig)
     return assessment_graph, wordcloud_component
+
 
 # Run the app
 if __name__ == "__main__":
