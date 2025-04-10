@@ -6,7 +6,7 @@ from datetime import datetime
 from spiderChart import spider
 from lineChart import time_series
 from bps_charts import generate_bps_figure, generate_sunburst_chart
-from php_daily import mood_sparklines, wordcloud_figure
+from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
 import json
 import os
 
@@ -469,15 +469,16 @@ app.layout = dbc.Container(
                     ),
                 ],
             ),
-                # PHP Daily Mood Assessments
+                # PHP Daily Assessments
                 dbc.Tab(
-                    label="📊 PHP Daily Mood Assessments",
+                    label="📊 PHP Daily Assessments",
                     tab_id="tab-5",
                     children=[
                         html.Br(),
                         dbc.Row(
                             dbc.Col(
                                 [
+                                    # Patient selection dropdown
                                     html.Div(
                                         [
                                             html.Label(
@@ -496,6 +497,28 @@ app.layout = dbc.Container(
                                         ],
                                         style={"width": "50%", "margin": "auto"},
                                     ),
+                                    # Category selection dropdown
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Data Category:",
+                                                className="text-white",
+                                            ),
+                                            dcc.RadioItems(
+                                                id="php-category-select",
+                                                options=[
+                                                    {"label": "Moods", "value": "Moods"},
+                                                    {"label": "Supports", "value": "Supports"},
+                                                    {"label": "Skills", "value": "Skills"},
+                                                    {"label": "Craving", "value": "Craving"},
+                                                ],
+                                                value="Moods",  # Default selection
+                                                labelStyle={'display': 'inline-block', 'margin-right': '20px'},
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto", "marginBottom": "20px"},
+                                    ),
+                                    # Containers for the figure and wordcloud
                                     html.Div(id="php-wordcloud-content", children=[]),
                                     html.Div(
                                         id="php-assessment-content",  # Content will be updated by the callback
@@ -506,7 +529,7 @@ app.layout = dbc.Container(
                             )
                         ),
                     ],
-                )
+                ),
             ]
         ),
     ],
@@ -630,12 +653,10 @@ def update_bps_content(patient_id):
                 }
             ],
             sort_action='native',  # Enable sorting
-            # No page_size to show all rows
         )
     else:
         sub_history_table = html.P("No substance use history (use_flag=1) available for this patient.", className="text-white")
 
-    # Display the text info, figure, and table
     return html.Div([
         html.H4("Patient Overview", className="text-white bg-dark p-2 rounded"),
         html.P(f"Patient ID: {patient_info['group_identifier']}", className="text-white"),
@@ -655,27 +676,59 @@ def update_bps_content(patient_id):
 @app.callback(
     [Output("php-assessment-content", "children"),
      Output("php-wordcloud-content", "children")],
-    [Input("php-patient-dropdown", "value")]
+    [Input("php-patient-dropdown", "value"),
+     Input("php-category-select", "value")]
 )
-def update_php_assessment(selected_patient_id):    
-    #  generates the mood sparklines
-    fig = mood_sparklines(php_daily, selected_patient_id)
-    
-    # WordCloud image
-    wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id)
-
-    # Return the assessment graph and word cloud image with text above the word cloud
-    return [
-        dcc.Graph(figure=fig),  
-        html.Div(
+def update_php_assessment(selected_patient_id, category):
+    # Based on the category selection, call the appropriate functions.
+    if category == "Moods":
+        fig = sparkline_figure(php_daily, selected_patient_id,'moods')
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'mood')
+        wordcloud_component = html.Div(
             [
-                html.H4("Patient's most common moods:", className="text-white text-center", style={'marginBottom': '50px'}),
-                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'  }),
+                html.H4("Patient's common words:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
             ],
-            style={'textAlign': 'center','marginTop': '50px','marginBottom': '50px' 
-            }  
+            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
         )
-    ]
+    elif category == "Supports":
+        fig = sparkline_figure(php_daily, selected_patient_id,'supports') 
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id,'support')  
+        wordcloud_component = html.Div(
+            [
+                html.H4("Patient's support keywords:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+            ],
+            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+        )
+    elif category == "Skills":
+        fig = sparkline_figure(php_daily, selected_patient_id,'skills') 
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id,'skill') 
+        wordcloud_component = html.Div(
+            [
+                html.H4("Patient's skills keywords:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+            ],
+            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+        )
+    elif category == "Craving":
+        fig = craving_line_chart(php_daily, selected_patient_id)  
+        wordcloud_component = html.Div()  # no wordcloud for cravings
+    else:
+        # Fallback to moods if unexpected input occurs
+        fig = sparkline_figure(php_daily, selected_patient_id,'moods')
+        wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id)
+        wordcloud_component = html.Div(
+            [
+                html.H4("Patient's common words:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto',  'display': 'block'}),
+            ],
+            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+        )
+    
+    assessment_graph = dcc.Graph(figure=fig)
+    return assessment_graph, wordcloud_component
+
 # Run the app
 if __name__ == "__main__":
     app.run(debug=True)
