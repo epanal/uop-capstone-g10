@@ -24,8 +24,6 @@ def spider(
 
     # Need the first value repeated at the end to complete the chart
     df['fill_in'] = df[cat_names[0]]
-    assessment_totals.append(assessment_totals[0])
-    cat_names.append(cat_names[0])
 
     # Initialize graph object
     fig = go.Figure()
