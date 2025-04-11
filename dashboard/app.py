@@ -2,6 +2,7 @@ from dash import Dash, html, dash_table, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime
 from spiderChart import spider
 from lineChart import time_series
@@ -46,6 +47,7 @@ ders2 = pd.read_csv(os.path.join(data_directory, "ders2_merged.csv"))
 bps = pd.read_csv(os.path.join(data_directory, "bps_anonimized.csv"))
 php_daily = pd.read_csv(os.path.join(data_directory, "extracted_php_assessments.csv"))
 sub_history = pd.read_csv(os.path.join(data_directory, 'patient_substance_history.csv'))
+stat_tests_data = pd.read_csv(os.path.join(data_directory, 'stat_tests_data.csv'))
 
 # Cleaning data
 who = clean_df(who)
@@ -79,10 +81,20 @@ bps_column_mapping = {
 }
 bps_df = bps.rename(columns=bps_column_mapping)
 
+# welcome page plots
 all_internal_motivation = " ".join(bps_df['int_motivation'].dropna())
 all_external_motivation = " ".join(bps_df['ext_motivation'].dropna())
 internal_wc = generate_wordcloud(all_internal_motivation, "Internal Motivation", "Blues")
 external_wc = generate_wordcloud(all_external_motivation, "External Motivation", "Oranges")
+
+# program type pie chart
+program_pie = px.pie(stat_tests_data, names='program',
+                     title='Program Types', hole=0.3)
+program_pie.update_layout(title_text='Program Types', title_x=0.5)
+# discharge type pie chart
+discharge_pie = px.pie(stat_tests_data, names='discharge_type',
+                       title='Discharge Types', hole=0.3)
+discharge_pie.update_layout(title_text='Program Types', title_x=0.5)
 
 # df for rows where use_flag = 1
 used_substances = sub_history[sub_history['use_flag'] == 1]
@@ -168,13 +180,13 @@ app.layout = dbc.Container(
             [
                 # Title Page
                 dbc.Tab(
-                    label="Title Page",
+                    label="Welcome!",
                     tab_id="tab-0",
                     children=[
                         html.Br(),
                         html.Div(
                             [
-                                html.H4("Patient Motivation Word Clouds",
+                                html.H4("Patient Motivations",
                                         className="text-white bg-dark p-2 rounded",
                                         style={'textAlign': 'center'})
                             ], style={"width": "50%", "margin": "auto"},
@@ -183,10 +195,26 @@ app.layout = dbc.Container(
                             dbc.Col([
                                 html.Img(src=f"data:image/png;base64,{internal_wc}",
                                          style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
-                            ], width={"size": 5}, align="center"),
+                            ], width={"size": 4}, align="center"),
                             dbc.Col([
                                 html.Img(src=f"data:image/png;base64,{external_wc}",
                                          style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
+                            ], width={"size": 4}, align="center")
+                        ], align="center", justify="center"),
+                        html.Br(),
+                        html.Div(
+                            [
+                                html.H4("Patient Distributions",
+                                        className="text-white bg-dark p-2 rounded",
+                                        style={'textAlign': 'center'})
+                            ], style={"width": "50%", "margin": "auto"},
+                        ),
+                        dbc.Row([
+                            dbc.Col([
+                                dcc.Graph(id='program-pie', figure=program_pie)
+                            ], width={"size": 5}, align="center"),
+                            dbc.Col([
+                                dcc.Graph(id='discharge-pie', figure=discharge_pie)
                             ], width={"size": 5}, align="center")
                         ], align="center", justify="center")
                     ],
@@ -652,24 +680,24 @@ def update_bps_content(patient_id):
             data=filtered_sub_history[display_columns].to_dict('records'),
             columns=[{"name": col, "id": col} for col in display_columns],
             style_table={
-                'overflowX': 'auto',  
+                'overflowX': 'auto',
                 'marginTop': '20px',
             },
             style_cell={
                 'textAlign': 'left',
-                'color': 'white', 
-                'backgroundColor': '#1a1a1a',  
+                'color': 'white',
+                'backgroundColor': '#1a1a1a',
                 'padding': '5px',
             },
             style_header={
-                'backgroundColor': '#343a40', 
+                'backgroundColor': '#343a40',
                 'fontWeight': 'bold',
                 'color': 'white',
             },
             style_data_conditional=[
                 {
                     'if': {'row_index': 'odd'},
-                    'backgroundColor': '#212529',  
+                    'backgroundColor': '#212529',
                 }
             ],
             sort_action='native',  # Enable sorting
