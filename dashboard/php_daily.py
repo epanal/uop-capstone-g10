@@ -111,6 +111,7 @@ def sparkline_figure(df_php_assessments, selected_patient_id, category):
         else:
             fig.update_yaxes(
                 showticklabels=False, 
+                tickfont=dict(size=12),
                 row=row, col=col,
                 range=y_axis_range
             )
@@ -129,10 +130,10 @@ def sparkline_figure(df_php_assessments, selected_patient_id, category):
         height=800,
         showlegend=False,
         title_x=0.5,
-        font=dict(size=14),
+        font=dict(size=20),
         template="plotly_dark",
-        paper_bgcolor="#1E1E1E",
-        plot_bgcolor="#1E1E1E"
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
     )
     
     return fig
@@ -158,20 +159,21 @@ def craving_line_chart(df_php_assessments, selected_patient_id):
     fig.update_layout(
         title=f"Craving Over Time for Patient {selected_patient_id}",
         template="plotly_dark",
-        paper_bgcolor="#1E1E1E",
-        plot_bgcolor="#1E1E1E",
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
             title="Assessment Date",
             tickangle=45,
             tickfont=dict(color="#FFFFFF")
         ),
+        title_font=dict(family="'Inter', sans-serif", size=26, color="#FFFFFF"),
         yaxis=dict(
             title="Craving",
             tickfont=dict(color="#FFFFFF")
         ),
         font=dict(
             family="'Inter', sans-serif",
-            size=12,
+            size=18,
             color="#FFFFFF"
         ),
         height=600,
@@ -209,7 +211,7 @@ def wordcloud_figure(df_php_assessments, selected_patient_id, category):
 
     # Generate WordCloud
     wordcloud = WordCloud(
-        width=400, height=200, background_color="#1E1E1E",
+        width=600, height=300, background_color='#1E1E1E',
         color_func=lambda *args, **kwargs: "#FFFFFF" 
     ).generate(matched_words)
 
