@@ -94,7 +94,7 @@ program_pie.update_layout(title_text='Program Types', title_x=0.5)
 # discharge type pie chart
 discharge_pie = px.pie(stat_tests_data, names='discharge_type',
                        title='Discharge Types', hole=0.3)
-discharge_pie.update_layout(title_text='Program Types', title_x=0.5)
+discharge_pie.update_layout(title_text='Discharge Types', title_x=0.5)
 
 # df for rows where use_flag = 1
 used_substances = sub_history[sub_history['use_flag'] == 1]
