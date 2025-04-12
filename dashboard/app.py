@@ -7,6 +7,7 @@ from datetime import datetime
 from spiderChart import spider
 from lineChart import time_series
 from wordCloud import generate_wordcloud
+from boxPlot import box_plot
 from bps_charts import generate_bps_figure, generate_sunburst_chart
 from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
 import json
@@ -162,14 +163,21 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 app.layout = dbc.Container(
     [
         html.Br(),
-        dbc.Row(
-            dbc.Col(
-                html.H2(
-                    "🩺 Patient Assessment Dashboard",
-                    className="text-center text-white",
+        # Title Section with Logo
+        html.Div(
+            [
+                # Logo Image
+                html.Img(
+                    src=app.get_asset_url("exist_logo_white.webp"),
+                    style={"height": "80px", "marginBottom": "20px"}
                 ),
-                width=12,
-            )
+                # Title Text
+                html.H2(
+                    "Patient Assessment Dashboard",
+                    className="text-center text-white"
+                ),
+            ],
+            style={"textAlign": "center", "marginTop": "20px"}
         ),
         html.Div(
             f"Today is {now.strftime('%B')} {now.strftime('%d')}"
@@ -438,7 +446,7 @@ app.layout = dbc.Container(
                 ),
                 # Biopsychosocial Assessment Tab with Toggle
                 dbc.Tab(
-                    label="🧍 Biopsychosocial Assessment",
+                    label="🩺 Biopsychosocial Assessment",
                     tab_id="tab-4",
                     children=[
                         html.Br(),
@@ -579,24 +587,52 @@ app.layout = dbc.Container(
                         ),
                     ],
                 ),
+                # Assessment Scores by Program and Discharge type
+                dbc.Tab(
+                    label= "📦 Box-Plots",
+                    tab_id="tab-6",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Assessment:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="box-assessment-select",
+                                                options=[
+                                                    {"label": name, "value": name}
+                                                    for name in assessments
+                                                ],
+                                                value=assessments[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                ], width=12,
+                            )
+                        ),
+                        html.Br(),
+                        dbc.Row([
+                            dbc.Col([
+                                dcc.Graph(id='program-box-plot',style={'width': '90%', 'height': '60%'})
+                            ], width={"size": 5}),
+                            dbc.Col([
+                                dcc.Graph(id='discharge-box-plot',style={'width': '90%', 'height': '60%'})
+                            ], width={"size": 5})
+                        ], align="center", justify="center")
+                    ],
+                ),
             ]
         ),
     ],
     fluid=True,
 )
-
-
-# Callbacks for title page
-# @app.callback(
-#     Output("word-cloud", "figure"),
-#     [Input(None, None)]
-# )
-# def update_word_cloud():
-#     all_internal_motivation = " ".join(bps_df['int_motivation'].dropna())
-#     all_external_motivation = " ".join(bps_df['ext_motivation'].dropna())
-#     internal_wc = generate_wordcloud(all_internal_motivation, "Internal Motivation", "Blues")
-#     external_wc = generate_wordcloud(all_external_motivation, "External Motivation", "Oranges")
-#     return
 
 
 # Callbacks for Assessment Scores Table
@@ -781,6 +817,24 @@ def update_php_assessment(selected_patient_id, category):
 
     assessment_graph = dcc.Graph(figure=fig)
     return assessment_graph, wordcloud_component
+
+
+# Callbacks for Line Chart
+@app.callback(
+    Output("program-box-plot", "figure"),
+    [Input("box-assessment-select", "value")],
+)
+def update_line_chart(assessment):
+    return box_plot(stat_tests_data, 'program', assessment)
+
+
+# Callbacks for Line Chart
+@app.callback(
+    Output("discharge-box-plot", "figure"),
+    [Input("box-assessment-select", "value")],
+)
+def update_line_chart(assessment):
+    return box_plot(stat_tests_data, 'discharge_type', assessment)
 
 
 # Run the app
