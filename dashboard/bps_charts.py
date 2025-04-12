@@ -51,15 +51,15 @@ def generate_sunburst_chart(dataframe, total_patients):
 
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#1E1E1E",
-        plot_bgcolor="#1E1E1E",
-        font=dict(family="'Inter', sans-serif", size=12, color="#FFFFFF"),
-        title_font=dict(family="'Inter', sans-serif", size=16, color="#FFFFFF"),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="'Inter', sans-serif", size=18, color="#FFFFFF"),
+        title_font=dict(family="'Inter', sans-serif", size=26, color="#FFFFFF"),
         xaxis=dict(tickfont=dict(color="#FFFFFF")),
         yaxis=dict(tickfont=dict(color="#FFFFFF"), range=[0, 5]),
         legend=dict(font=dict(color="#FFFFFF")),
-        width=700,
-        height=700
+        width = 800,
+        height = 800
     )
 
     return fig
@@ -104,13 +104,13 @@ def generate_bps_figure(bps_df, bps_column_mapping, patient_id):
     
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#1E1E1E",
-        plot_bgcolor="#1E1E1E",
-        font=dict(family="'Inter', sans-serif", size=12, color="#FFFFFF"),
-        title_font=dict(family="'Inter', sans-serif", size=16, color="#FFFFFF"),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="'Inter', sans-serif", size=18, color="#FFFFFF"),
+        title_font=dict(family="'Inter', sans-serif", size=26, color="#FFFFFF"),
         xaxis=dict(tickfont=dict(color="#FFFFFF")),
         yaxis=dict(tickfont=dict(color="#FFFFFF"), range=[0, 5]),
-        legend=dict(font=dict(color="#FFFFFF"))
+        legend=dict(font=dict(size=18, color="#FFFFFF"))
     )
     fig.update_traces(hovertemplate="%{x}:<br>Score: %{y}<br><br>Rating/Severity Scale:<br>0 - Not at all<br>1 - Slightly<br>2 - Moderately<br>3 - Considerably<br>4 - Extremely<br><extra></extra>")
 
