@@ -162,14 +162,21 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 app.layout = dbc.Container(
     [
         html.Br(),
-        dbc.Row(
-            dbc.Col(
-                html.H2(
-                    "🩺 Patient Assessment Dashboard",
-                    className="text-center text-white",
+        # Title Section with Logo
+        html.Div(
+            [
+                # Logo Image
+                html.Img(
+                    src=app.get_asset_url("exist_logo_white.webp"),
+                    style={"height": "80px", "marginBottom": "20px"} 
                 ),
-                width=12,
-            )
+                # Title Text
+                html.H2(
+                    "Patient Assessment Dashboard",
+                    className="text-center text-white"
+                ),
+            ],
+            style={"textAlign": "center", "marginTop": "20px"}
         ),
         html.Div(
             f"Today is {now.strftime('%B')} {now.strftime('%d')}"
@@ -438,7 +445,7 @@ app.layout = dbc.Container(
                 ),
                 # Biopsychosocial Assessment Tab with Toggle
                 dbc.Tab(
-                    label="🧍 Biopsychosocial Assessment",
+                    label="🩺 Biopsychosocial Assessment",
                     tab_id="tab-4",
                     children=[
                         html.Br(),
