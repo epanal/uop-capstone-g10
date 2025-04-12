@@ -169,7 +169,7 @@ app.layout = dbc.Container(
                 # Logo Image
                 html.Img(
                     src=app.get_asset_url("exist_logo_white.webp"),
-                    style={"height": "80px", "marginBottom": "20px"}
+                    style={"height": "80px", "marginBottom": "20px"} 
                 ),
                 # Title Text
                 html.H2(
