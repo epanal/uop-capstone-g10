@@ -171,7 +171,7 @@ def ahcrm_assessment_layout():
     ])
 
 # Initialize the app with Bootstrap theme
-app = Dash(__name__, 
+app = Dash(__name__,
            #suppress_callback_exceptions=True,
             external_stylesheets=[dbc.themes.CYBORG])
 
@@ -185,7 +185,7 @@ app.layout = dbc.Container(
                 # Logo Image
                 html.Img(
                     src=app.get_asset_url("exist_logo_white.webp"),
-                    style={"height": "80px", "marginBottom": "20px"} 
+                    style={"height": "80px", "marginBottom": "20px"}
                 ),
                 # Title Text
                 html.H2(
@@ -240,7 +240,8 @@ app.layout = dbc.Container(
                             dbc.Col([
                                 dcc.Graph(id='discharge-pie', figure=discharge_pie)
                             ], width={"size": 5}, align="center")
-                        ], align="center", justify="center")
+                        ], align="center", justify="center"),
+                        html.Br(),
                     ],
                 ),
                 # Assessment Scores Table
@@ -397,7 +398,7 @@ app.layout = dbc.Container(
                 ),
                 # Line Chart Tab
                 dbc.Tab(
-                    label="📈 Line Chart",
+                    label="📈 Risk Analysis",
                     tab_id="tab-3",
                     children=[
                         html.Br(),
@@ -443,6 +444,32 @@ app.layout = dbc.Container(
                                             ),
                                         ],
                                         style={"width": "50%", "margin": "auto"},
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Adjust Standard Deviation Threshold:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Slider(
+                                                id="std-threshold-slider",
+                                                min=0.5,
+                                                max=3.0,
+                                                step=0.1,
+                                                value=1.5,
+                                                marks={i: str(i) for i in range(1, 4)},
+                                                tooltip={
+                                                    "always_visible": True,
+                                                    "placement": "bottom",
+                                                },
+                                            ),
+                                        ],
+                                        style={
+                                            "width": "50%",
+                                            "margin": "auto",
+                                            "padding-top": "10px",
+                                            "padding-bottom": "20px",
+                                        },
                                     ),
                                     html.Div(
                                         dcc.Graph(
@@ -692,10 +719,14 @@ def update_spider_chart(patient_id):
 # Callbacks for Line Chart
 @app.callback(
     Output("line-chart", "figure"),
-    [Input("line-patient-select", "value"), Input("line-assessment-select", "value")],
+    [
+        Input("line-patient-select", "value"),
+        Input("line-assessment-select", "value"),
+        Input("std-threshold-slider", "value"),
+    ],
 )
-def update_line_chart(patient_id, assessment):
-    return time_series(df, assessment, patient_id)
+def update_line_chart(patient_id, assessment, std_threshold):
+    return time_series(df, assessment, patient_id, std_threshold)
 
 @app.callback(
     [Output("bps-all-container", "style"),
@@ -845,22 +876,23 @@ def update_php_assessment(selected_patient_id, category):
     return assessment_graph, wordcloud_component
 
 
-# Callbacks for Line Chart
+# Callbacks for Box Plot
 @app.callback(
     Output("program-box-plot", "figure"),
     [Input("box-assessment-select", "value")],
 )
-def update_line_chart(assessment):
+def update_program_box_plot(assessment):
     return box_plot(stat_tests_data, 'program', assessment)
 
 
-# Callbacks for Line Chart
+# Callbacks for Box Plot
 @app.callback(
     Output("discharge-box-plot", "figure"),
     [Input("box-assessment-select", "value")],
 )
-def update_line_chart(assessment):
+def update_discharge_box_plot(assessment):
     return box_plot(stat_tests_data, 'discharge_type', assessment)
+
 
 @app.callback(
     Output('main-tabs-content', 'children'),
@@ -878,117 +910,68 @@ def render_main_tab(tab):
                     clearable=False,
                     style={'width': '50%'}
                 ),
-                html.Label("Select Chart Type: "),
-                dcc.RadioItems(
-                    id='chart-type',
-                    options=[
-                        {'label': 'Radar Chart', 'value': 'radar'},
-                        {'label': 'Pie Chart', 'value': 'pie'}
-                    ],
-                    value='radar',
-                    labelStyle={'display': 'inline-block', 'margin-right': '10px'}
-                ),
-      #          html.Button("Download Summary as Excel", id="download-btn"),
-      #          dcc.Download(id="download-data")
             ], style={'padding': '20px'}),
-            dcc.Tabs(id='tabs', value='tab-summary', children=[
-                dcc.Tab(label='Chart Summary', value='tab-summary'),
-                dcc.Tab(label='Editable Summary Table', value='tab-table'),
+
+            dcc.Tabs(id='tabs', value='tab-categories', children=[
                 dcc.Tab(label='Health Categories', value='tab-categories')
             ]),
+
             html.Div(id='tabs-content')
         ])
+
     elif tab == 'tab-full-summary':
         data = df_ahcrm.copy()
         if 'PII_ID' in data.columns:
             data = data.drop(columns=['PII_ID'])
-        return dbc.Container([
-            html.H1("Histogram and Boxplot of all columns", className="text-center text-primary mb-4"),
-            dbc.Row([
-                dbc.Col(
-                    dcc.Dropdown(
-                        id='feature_dropdown',
-                        options=[{'label': col, 'value': col} for col in data.columns],
-                        value=data.columns[0],
-                        clearable=False,
-                        className="mb-3"
-                    ),
-                    width=6
+
+        return html.Div([
+            html.H1("Histogram and Boxplot of all columns", style={'textAlign': 'center'}),
+
+            html.Div([
+                html.Label("Select Feature:"),
+                dcc.Dropdown(
+                    id='feature_dropdown',
+                    options=[{'label': col, 'value': col} for col in data.columns],
+                    value=data.columns[0],
+                    clearable=False,
+                    style={'width': '50%'}
                 )
-            ]),
-            dbc.Row([
-                dbc.Col(dcc.Graph(id='histogram'), width=6),
-                dbc.Col(dcc.Graph(id='boxplot'), width=6)
+            ], style={'padding': '20px'}),
+
+            html.Div([
+                dcc.Graph(id='histogram'),
+                dcc.Graph(id='boxplot')
             ])
-        ], fluid=True)
+        ])
+
     return html.Div(["Unknown main tab"])
+
 
 @app.callback(
     Output('tabs-content', 'children'),
-    [Input('tabs', 'value'),
-     Input('pii-dropdown', 'value'),
-     Input('chart-type', 'value')]
+    Input('tabs', 'value'),
+    Input('pii-dropdown', 'value')
 )
-def render_tab(tab, selected_pii, chart_type):
+def render_tab(tab, selected_pii):
     person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
-    eda_summary = {
-        'Living Situation': person['Living_Situation'],
-        'Housing Issues': person['Housing_Issues'],
-        'Utility Shutoff Threat': person['Utility_Shutoff_Threat'],
-        'Physical Abuse': person['Physical_Abuse_Frequency'],
-        'Verbal Abuse': person['Verbal_Abuse_Frequency'],
-        'Financial Difficulty': person['Financial_Difficulty'],
-        'Exercise (Days/Week)': person['Exercise_Days_Per_Week'],
-        'Exercise (Minutes/Day)': person['Exercise_Minutes_Per_Day'],
-        'Tobacco Use': person['Tobacco_Use_Frequency'],
-        'Prescription Drug Misuse': person['Prescription_Drug_Misuse'],
-        'Illegal Drug Use': person['Illegal_Drug_Use'],
-        'Recent Stress Frequency': person['Recent_Stress_Frequency'],
-        'Current Stress Level': person['Current_Stress_Level'],
-        'Cognitive Difficulty': person['Cognitive_Difficulty'],
-        'Errand Difficulty': person['Errand_Difficulty']
-    }
-    if tab == 'tab-summary':
-        if chart_type == 'radar':
-            categories = list(eda_summary.keys())
-            values = [1] * len(categories)
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r=values,
-                theta=categories,
-                fill='toself',
-                text=list(eda_summary.values()),
-                name='Summary'
-            ))
-            fig.update_layout(polar=dict(radialaxis=dict(visible=False)), showlegend=False)
-        else:
-            fig = px.pie(names=list(eda_summary.keys()), values=[1] * len(eda_summary),
-                         hover_data=[list(eda_summary.values())], title="PII Summary Distribution")
-        return html.Div([
-            html.H4(f"{chart_type.title()} Chart Summary for PII_ID: {selected_pii}"),
-            dcc.Graph(figure=fig)
-        ])
-    elif tab == 'tab-table':
-        summary_df = pd.DataFrame(eda_summary.items(), columns=['Feature', 'Value'])
-        return html.Div([
-            html.H4("Editable Summary Table"),
-            dash_table.DataTable(
-                data=summary_df.to_dict('records'),
-                columns=[{"name": i, "id": i, 'editable': True} for i in summary_df.columns],
-                editable=True,
-                style_table={'width': '80%'},
-                style_cell={'textAlign': 'left'}
-            )
-        ])
-    elif tab == 'tab-categories':
+
+    if tab == 'tab-categories':
         physical = ['Exercise_Days_Per_Week', 'Exercise_Minutes_Per_Day']
         mental = ['Cognitive_Difficulty', 'Errand_Difficulty', 'Current_Stress_Level', 'Recent_Stress_Frequency']
         substance = ['Tobacco_Use_Frequency', 'Prescription_Drug_Misuse', 'Illegal_Drug_Use']
+
         def make_card(title, fields):
             return html.Div([
                 html.H5(title),
                 html.Ul([html.Li(f"{field.replace('_', ' ')}: {person[field]}") for field in fields])
-            ], style={'border': '1px solid #ccc', 'padding': '15px', 'margin': '10px', 'borderRadius': '10px', 'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'})
+            ], style={
+                'border': '1px solid #ccc',
+                'padding': '15px',
+                'margin': '10px',
+                'borderRadius': '10px',
+                'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
+            })
+
         return html.Div([
             html.Div([
                 make_card("Physical Health", physical),
@@ -996,41 +979,9 @@ def render_tab(tab, selected_pii, chart_type):
                 make_card("Substance Use", substance)
             ], style={'display': 'flex', 'flexWrap': 'wrap'})
         ])
+
     return html.Div(["Unknown tab"])
 
-'''
-@app.callback(
-    Output("download-data", "data"),
-    Input("download-btn", "n_clicks"),
-    State("pii-dropdown", "value"),
-    prevent_initial_call=True
-)
-def download_excel(n_clicks, selected_pii):
-    person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
-    eda_summary = {
-        'Living Situation': person['Living_Situation'],
-        'Housing Issues': person['Housing_Issues'],
-        'Utility Shutoff Threat': person['Utility_Shutoff_Threat'],
-        'Physical Abuse': person['Physical_Abuse_Frequency'],
-        'Verbal Abuse': person['Verbal_Abuse_Frequency'],
-        'Financial Difficulty': person['Financial_Difficulty'],
-        'Exercise (Days/Week)': person['Exercise_Days_Per_Week'],
-        'Exercise (Minutes/Day)': person['Exercise_Minutes_Per_Day'],
-        'Tobacco Use': person['Tobacco_Use_Frequency'],
-        'Prescription Drug Misuse': person['Prescription_Drug_Misuse'],
-        'Illegal Drug Use': person['Illegal_Drug_Use'],
-        'Recent Stress Frequency': person['Recent_Stress_Frequency'],
-        'Current Stress Level': person['Current_Stress_Level'],
-        'Cognitive Difficulty': person['Cognitive_Difficulty'],
-        'Errand Difficulty': person['Errand_Difficulty']
-    }
-    summary_df = pd.DataFrame(eda_summary.items(), columns=['Feature', 'Value'])
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        summary_df.to_excel(writer, index=False, sheet_name='PII Summary')
-    output.seek(0)
-    return dcc.send_bytes(output.read(), filename=f"PII_{selected_pii}_summary.xlsx")
-'''
 
 @app.callback(
     Output('histogram', 'figure'),
@@ -1040,9 +991,15 @@ def download_excel(n_clicks, selected_pii):
 def update_full_summary_plots(feature):
     if feature is None:
         return go.Figure(), go.Figure()
-    hist_fig = px.histogram(df_ahcrm, x=feature, title=f"Distribution of {feature}", color_discrete_sequence=['#636EFA'])
-    box_fig = px.box(df_ahcrm, y=feature, title=f"Boxplot of {feature}", color_discrete_sequence=['#EF553B'])
+
+    hist_fig = px.histogram(df_ahcrm, x=feature, title=f"Distribution of {feature}",
+                            color_discrete_sequence=['#636EFA'])
+    box_fig = px.box(df_ahcrm, y=feature, title=f"Boxplot of {feature}",
+                     color_discrete_sequence=['#EF553B'])
     return hist_fig, box_fig
+
+
+
 
 # Run the app
 if __name__ == "__main__":
