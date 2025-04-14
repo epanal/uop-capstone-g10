@@ -60,24 +60,6 @@ def time_series(df, assessment, patient_id, std_threshold=1.5):
         )
     )
 
-    # Add color-mapped markers with size variation
-    fig.add_trace(
-        go.Scatter(
-            x=filtered_df["assessment_date"],
-            y=filtered_df[assessment],
-            mode="markers",
-            marker=dict(
-                size=12,
-                color=filtered_df[assessment],
-                showscale=True,
-                colorbar=dict(title="Score Level"),
-                line=dict(width=2, color="DarkSlateGrey"),
-            ),
-            name=f"Assessment Scores",
-            hovertemplate="<b>Date:</b> %{x}<br><b>Score:</b> %{y}<extra></extra>",
-        )
-    )
-
     # Highlight outliers with different markers
     outliers = filtered_df[filtered_df["is_outlier"]]
     if not outliers.empty:
@@ -101,14 +83,14 @@ def time_series(df, assessment, patient_id, std_threshold=1.5):
     fig.add_hline(
         y=upper_bound,
         line=dict(color="white", dash="dot", width=4),
-        annotation_text="Above Normal Range",
+        annotation_text="Above Usual Range",
         annotation_position="bottom right",
     )
 
     fig.add_hline(
         y=lower_bound,
         line=dict(color="white", dash="dot", width=4),
-        annotation_text="Below Normal Range",
+        annotation_text="Below Usual Range",
         annotation_position="top right",
     )
 
