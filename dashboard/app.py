@@ -1,4 +1,4 @@
-from dash import Dash, html, dash_table, dcc, Input, Output
+from dash import Dash, html, State, dash_table, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
@@ -49,6 +49,10 @@ bps = pd.read_csv(os.path.join(data_directory, "bps_anonimized.csv"))
 php_daily = pd.read_csv(os.path.join(data_directory, "extracted_php_assessments.csv"))
 sub_history = pd.read_csv(os.path.join(data_directory, 'patient_substance_history.csv'))
 stat_tests_data = pd.read_csv(os.path.join(data_directory, 'stat_tests_data.csv'))
+df_ahcrm = pd.read_csv(os.path.join(data_directory, "ahcm_output_data_cleaned.csv"))
+
+# ahcrm
+pii_ids = df_ahcrm['PII_ID'].unique()
 
 # Cleaning data
 who = clean_df(who)
@@ -156,8 +160,20 @@ totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 # Current date
 now = datetime.now()
 
+def ahcrm_assessment_layout():
+    return html.Div([
+        html.H2("PII Health & Stress Dashboard", style={'textAlign': 'center'}),
+        dcc.Tabs(id='main-tabs', value='tab-pii-summary', children=[
+            dcc.Tab(label='PII Summary View', value='tab-pii-summary'),
+            dcc.Tab(label='Full Dataset Summary', value='tab-full-summary')
+        ]),
+        html.Div(id='main-tabs-content')
+    ])
+
 # Initialize the app with Bootstrap theme
-app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
+app = Dash(__name__,
+           #suppress_callback_exceptions=True,
+            external_stylesheets=[dbc.themes.CYBORG])
 
 # App layout with centered dropdowns and plots
 app.layout = dbc.Container(
@@ -169,7 +185,7 @@ app.layout = dbc.Container(
                 # Logo Image
                 html.Img(
                     src=app.get_asset_url("exist_logo_white.webp"),
-                    style={"height": "80px", "marginBottom": "20px"} 
+                    style={"height": "80px", "marginBottom": "20px"}
                 ),
                 # Title Text
                 html.H2(
@@ -224,7 +240,8 @@ app.layout = dbc.Container(
                             dbc.Col([
                                 dcc.Graph(id='discharge-pie', figure=discharge_pie)
                             ], width={"size": 5}, align="center")
-                        ], align="center", justify="center")
+                        ], align="center", justify="center"),
+                        html.Br(),
                     ],
                 ),
                 # Assessment Scores Table
@@ -381,7 +398,7 @@ app.layout = dbc.Container(
                 ),
                 # Line Chart Tab
                 dbc.Tab(
-                    label="📈 Line Chart",
+                    label="📈 Risk Analysis",
                     tab_id="tab-3",
                     children=[
                         html.Br(),
@@ -429,6 +446,32 @@ app.layout = dbc.Container(
                                         style={"width": "50%", "margin": "auto"},
                                     ),
                                     html.Div(
+                                        [
+                                            html.Label(
+                                                "Adjust Standard Deviation Threshold:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Slider(
+                                                id="std-threshold-slider",
+                                                min=0.5,
+                                                max=3.0,
+                                                step=0.1,
+                                                value=1.5,
+                                                marks={i: str(i) for i in range(1, 4)},
+                                                tooltip={
+                                                    "always_visible": True,
+                                                    "placement": "bottom",
+                                                },
+                                            ),
+                                        ],
+                                        style={
+                                            "width": "50%",
+                                            "margin": "auto",
+                                            "padding-top": "10px",
+                                            "padding-bottom": "20px",
+                                        },
+                                    ),
+                                    html.Div(
                                         dcc.Graph(
                                             id="line-chart",
                                             style={
@@ -446,7 +489,7 @@ app.layout = dbc.Container(
                 ),
                 # Biopsychosocial Assessment Tab with Toggle
                 dbc.Tab(
-                    label="🩺 Biopsychosocial Assessment",
+                    label="🏥 Biopsychosocial Assessment",
                     tab_id="tab-4",
                     children=[
                         html.Br(),
@@ -628,7 +671,17 @@ app.layout = dbc.Container(
                         ], align="center", justify="center")
                     ],
                 ),
-            ]
+                dbc.Tab(
+                    label="📉 AHCM Assessment",
+                    tab_id="tab-ahcrm-assessment",
+                    children=[ahcrm_assessment_layout()]
+                )
+            ],
+            style={
+                "fontSize": "20px",        # Increase font size
+                "padding": "12px 20px",     # Increase padding
+                "margin": "0 5px"
+            },
         ),
     ],
     fluid=True,
@@ -666,10 +719,14 @@ def update_spider_chart(patient_id):
 # Callbacks for Line Chart
 @app.callback(
     Output("line-chart", "figure"),
-    [Input("line-patient-select", "value"), Input("line-assessment-select", "value")],
+    [
+        Input("line-patient-select", "value"),
+        Input("line-assessment-select", "value"),
+        Input("std-threshold-slider", "value"),
+    ],
 )
-def update_line_chart(patient_id, assessment):
-    return time_series(df, assessment, patient_id)
+def update_line_chart(patient_id, assessment, std_threshold):
+    return time_series(df, assessment, patient_id, std_threshold)
 
 @app.callback(
     [Output("bps-all-container", "style"),
@@ -819,22 +876,129 @@ def update_php_assessment(selected_patient_id, category):
     return assessment_graph, wordcloud_component
 
 
-# Callbacks for Line Chart
+# Callbacks for Box Plot
 @app.callback(
     Output("program-box-plot", "figure"),
     [Input("box-assessment-select", "value")],
 )
-def update_line_chart(assessment):
+def update_program_box_plot(assessment):
     return box_plot(stat_tests_data, 'program', assessment)
 
 
-# Callbacks for Line Chart
+# Callbacks for Box Plot
 @app.callback(
     Output("discharge-box-plot", "figure"),
     [Input("box-assessment-select", "value")],
 )
-def update_line_chart(assessment):
+def update_discharge_box_plot(assessment):
     return box_plot(stat_tests_data, 'discharge_type', assessment)
+
+
+@app.callback(
+    Output('main-tabs-content', 'children'),
+    Input('main-tabs', 'value')
+)
+def render_main_tab(tab):
+    if tab == 'tab-pii-summary':
+        return html.Div([
+            html.Div([
+                html.Label("Select PII_ID: "),
+                dcc.Dropdown(
+                    id='pii-dropdown',
+                    options=[{'label': str(pii), 'value': pii} for pii in pii_ids],
+                    value=pii_ids[0],
+                    clearable=False,
+                    style={'width': '50%'}
+                ),
+            ], style={'padding': '20px'}),
+
+            dcc.Tabs(id='tabs', value='tab-categories', children=[
+                dcc.Tab(label='Health Categories', value='tab-categories')
+            ]),
+
+            html.Div(id='tabs-content')
+        ])
+
+    elif tab == 'tab-full-summary':
+        data = df_ahcrm.copy()
+        if 'PII_ID' in data.columns:
+            data = data.drop(columns=['PII_ID'])
+
+        return html.Div([
+            html.H1("Histogram and Boxplot of all columns", style={'textAlign': 'center'}),
+
+            html.Div([
+                html.Label("Select Feature:"),
+                dcc.Dropdown(
+                    id='feature_dropdown',
+                    options=[{'label': col, 'value': col} for col in data.columns],
+                    value=data.columns[0],
+                    clearable=False,
+                    style={'width': '50%'}
+                )
+            ], style={'padding': '20px'}),
+
+            html.Div([
+                dcc.Graph(id='histogram'),
+                dcc.Graph(id='boxplot')
+            ])
+        ])
+
+    return html.Div(["Unknown main tab"])
+
+
+@app.callback(
+    Output('tabs-content', 'children'),
+    Input('tabs', 'value'),
+    Input('pii-dropdown', 'value')
+)
+def render_tab(tab, selected_pii):
+    person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
+
+    if tab == 'tab-categories':
+        physical = ['Exercise_Days_Per_Week', 'Exercise_Minutes_Per_Day']
+        mental = ['Cognitive_Difficulty', 'Errand_Difficulty', 'Current_Stress_Level', 'Recent_Stress_Frequency']
+        substance = ['Tobacco_Use_Frequency', 'Prescription_Drug_Misuse', 'Illegal_Drug_Use']
+
+        def make_card(title, fields):
+            return html.Div([
+                html.H5(title),
+                html.Ul([html.Li(f"{field.replace('_', ' ')}: {person[field]}") for field in fields])
+            ], style={
+                'border': '1px solid #ccc',
+                'padding': '15px',
+                'margin': '10px',
+                'borderRadius': '10px',
+                'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
+            })
+
+        return html.Div([
+            html.Div([
+                make_card("Physical Health", physical),
+                make_card("Mental Health", mental),
+                make_card("Substance Use", substance)
+            ], style={'display': 'flex', 'flexWrap': 'wrap'})
+        ])
+
+    return html.Div(["Unknown tab"])
+
+
+@app.callback(
+    Output('histogram', 'figure'),
+    Output('boxplot', 'figure'),
+    Input('feature_dropdown', 'value')
+)
+def update_full_summary_plots(feature):
+    if feature is None:
+        return go.Figure(), go.Figure()
+
+    hist_fig = px.histogram(df_ahcrm, x=feature, title=f"Distribution of {feature}",
+                            color_discrete_sequence=['#636EFA'])
+    box_fig = px.box(df_ahcrm, y=feature, title=f"Boxplot of {feature}",
+                     color_discrete_sequence=['#EF553B'])
+    return hist_fig, box_fig
+
+
 
 
 # Run the app
