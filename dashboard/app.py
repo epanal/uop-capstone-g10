@@ -1,4 +1,4 @@
-from dash import Dash, html, dash_table, dcc, Input, Output
+from dash import Dash, html, State, dash_table, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
@@ -49,6 +49,10 @@ bps = pd.read_csv(os.path.join(data_directory, "bps_anonimized.csv"))
 php_daily = pd.read_csv(os.path.join(data_directory, "extracted_php_assessments.csv"))
 sub_history = pd.read_csv(os.path.join(data_directory, 'patient_substance_history.csv'))
 stat_tests_data = pd.read_csv(os.path.join(data_directory, 'stat_tests_data.csv'))
+df_ahcrm = pd.read_csv(os.path.join(data_directory, "ahcm_output_data_cleaned.csv"))
+
+# ahcrm
+pii_ids = df_ahcrm['PII_ID'].unique()
 
 # Cleaning data
 who = clean_df(who)
@@ -156,8 +160,20 @@ totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 # Current date
 now = datetime.now()
 
+def ahcrm_assessment_layout():
+    return html.Div([
+        html.H2("PII Health & Stress Dashboard", style={'textAlign': 'center'}),
+        dcc.Tabs(id='main-tabs', value='tab-pii-summary', children=[
+            dcc.Tab(label='PII Summary View', value='tab-pii-summary'),
+            dcc.Tab(label='Full Dataset Summary', value='tab-full-summary')
+        ]),
+        html.Div(id='main-tabs-content')
+    ])
+
 # Initialize the app with Bootstrap theme
-app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
+app = Dash(__name__, 
+           #suppress_callback_exceptions=True,
+            external_stylesheets=[dbc.themes.CYBORG])
 
 # App layout with centered dropdowns and plots
 app.layout = dbc.Container(
@@ -446,7 +462,7 @@ app.layout = dbc.Container(
                 ),
                 # Biopsychosocial Assessment Tab with Toggle
                 dbc.Tab(
-                    label="🩺 Biopsychosocial Assessment",
+                    label="🏥 Biopsychosocial Assessment",
                     tab_id="tab-4",
                     children=[
                         html.Br(),
@@ -628,7 +644,17 @@ app.layout = dbc.Container(
                         ], align="center", justify="center")
                     ],
                 ),
-            ]
+                dbc.Tab(
+                    label="📉 AHCM Assessment",
+                    tab_id="tab-ahcrm-assessment",
+                    children=[ahcrm_assessment_layout()]
+                )
+            ],
+            style={
+                "fontSize": "20px",        # Increase font size
+                "padding": "12px 20px",     # Increase padding
+                "margin": "0 5px"
+            },
         ),
     ],
     fluid=True,
@@ -836,6 +862,187 @@ def update_line_chart(assessment):
 def update_line_chart(assessment):
     return box_plot(stat_tests_data, 'discharge_type', assessment)
 
+@app.callback(
+    Output('main-tabs-content', 'children'),
+    Input('main-tabs', 'value')
+)
+def render_main_tab(tab):
+    if tab == 'tab-pii-summary':
+        return html.Div([
+            html.Div([
+                html.Label("Select PII_ID: "),
+                dcc.Dropdown(
+                    id='pii-dropdown',
+                    options=[{'label': str(pii), 'value': pii} for pii in pii_ids],
+                    value=pii_ids[0],
+                    clearable=False,
+                    style={'width': '50%'}
+                ),
+                html.Label("Select Chart Type: "),
+                dcc.RadioItems(
+                    id='chart-type',
+                    options=[
+                        {'label': 'Radar Chart', 'value': 'radar'},
+                        {'label': 'Pie Chart', 'value': 'pie'}
+                    ],
+                    value='radar',
+                    labelStyle={'display': 'inline-block', 'margin-right': '10px'}
+                ),
+      #          html.Button("Download Summary as Excel", id="download-btn"),
+      #          dcc.Download(id="download-data")
+            ], style={'padding': '20px'}),
+            dcc.Tabs(id='tabs', value='tab-summary', children=[
+                dcc.Tab(label='Chart Summary', value='tab-summary'),
+                dcc.Tab(label='Editable Summary Table', value='tab-table'),
+                dcc.Tab(label='Health Categories', value='tab-categories')
+            ]),
+            html.Div(id='tabs-content')
+        ])
+    elif tab == 'tab-full-summary':
+        data = df_ahcrm.copy()
+        if 'PII_ID' in data.columns:
+            data = data.drop(columns=['PII_ID'])
+        return dbc.Container([
+            html.H1("Histogram and Boxplot of all columns", className="text-center text-primary mb-4"),
+            dbc.Row([
+                dbc.Col(
+                    dcc.Dropdown(
+                        id='feature_dropdown',
+                        options=[{'label': col, 'value': col} for col in data.columns],
+                        value=data.columns[0],
+                        clearable=False,
+                        className="mb-3"
+                    ),
+                    width=6
+                )
+            ]),
+            dbc.Row([
+                dbc.Col(dcc.Graph(id='histogram'), width=6),
+                dbc.Col(dcc.Graph(id='boxplot'), width=6)
+            ])
+        ], fluid=True)
+    return html.Div(["Unknown main tab"])
+
+@app.callback(
+    Output('tabs-content', 'children'),
+    [Input('tabs', 'value'),
+     Input('pii-dropdown', 'value'),
+     Input('chart-type', 'value')]
+)
+def render_tab(tab, selected_pii, chart_type):
+    person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
+    eda_summary = {
+        'Living Situation': person['Living_Situation'],
+        'Housing Issues': person['Housing_Issues'],
+        'Utility Shutoff Threat': person['Utility_Shutoff_Threat'],
+        'Physical Abuse': person['Physical_Abuse_Frequency'],
+        'Verbal Abuse': person['Verbal_Abuse_Frequency'],
+        'Financial Difficulty': person['Financial_Difficulty'],
+        'Exercise (Days/Week)': person['Exercise_Days_Per_Week'],
+        'Exercise (Minutes/Day)': person['Exercise_Minutes_Per_Day'],
+        'Tobacco Use': person['Tobacco_Use_Frequency'],
+        'Prescription Drug Misuse': person['Prescription_Drug_Misuse'],
+        'Illegal Drug Use': person['Illegal_Drug_Use'],
+        'Recent Stress Frequency': person['Recent_Stress_Frequency'],
+        'Current Stress Level': person['Current_Stress_Level'],
+        'Cognitive Difficulty': person['Cognitive_Difficulty'],
+        'Errand Difficulty': person['Errand_Difficulty']
+    }
+    if tab == 'tab-summary':
+        if chart_type == 'radar':
+            categories = list(eda_summary.keys())
+            values = [1] * len(categories)
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r=values,
+                theta=categories,
+                fill='toself',
+                text=list(eda_summary.values()),
+                name='Summary'
+            ))
+            fig.update_layout(polar=dict(radialaxis=dict(visible=False)), showlegend=False)
+        else:
+            fig = px.pie(names=list(eda_summary.keys()), values=[1] * len(eda_summary),
+                         hover_data=[list(eda_summary.values())], title="PII Summary Distribution")
+        return html.Div([
+            html.H4(f"{chart_type.title()} Chart Summary for PII_ID: {selected_pii}"),
+            dcc.Graph(figure=fig)
+        ])
+    elif tab == 'tab-table':
+        summary_df = pd.DataFrame(eda_summary.items(), columns=['Feature', 'Value'])
+        return html.Div([
+            html.H4("Editable Summary Table"),
+            dash_table.DataTable(
+                data=summary_df.to_dict('records'),
+                columns=[{"name": i, "id": i, 'editable': True} for i in summary_df.columns],
+                editable=True,
+                style_table={'width': '80%'},
+                style_cell={'textAlign': 'left'}
+            )
+        ])
+    elif tab == 'tab-categories':
+        physical = ['Exercise_Days_Per_Week', 'Exercise_Minutes_Per_Day']
+        mental = ['Cognitive_Difficulty', 'Errand_Difficulty', 'Current_Stress_Level', 'Recent_Stress_Frequency']
+        substance = ['Tobacco_Use_Frequency', 'Prescription_Drug_Misuse', 'Illegal_Drug_Use']
+        def make_card(title, fields):
+            return html.Div([
+                html.H5(title),
+                html.Ul([html.Li(f"{field.replace('_', ' ')}: {person[field]}") for field in fields])
+            ], style={'border': '1px solid #ccc', 'padding': '15px', 'margin': '10px', 'borderRadius': '10px', 'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'})
+        return html.Div([
+            html.Div([
+                make_card("Physical Health", physical),
+                make_card("Mental Health", mental),
+                make_card("Substance Use", substance)
+            ], style={'display': 'flex', 'flexWrap': 'wrap'})
+        ])
+    return html.Div(["Unknown tab"])
+
+'''
+@app.callback(
+    Output("download-data", "data"),
+    Input("download-btn", "n_clicks"),
+    State("pii-dropdown", "value"),
+    prevent_initial_call=True
+)
+def download_excel(n_clicks, selected_pii):
+    person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
+    eda_summary = {
+        'Living Situation': person['Living_Situation'],
+        'Housing Issues': person['Housing_Issues'],
+        'Utility Shutoff Threat': person['Utility_Shutoff_Threat'],
+        'Physical Abuse': person['Physical_Abuse_Frequency'],
+        'Verbal Abuse': person['Verbal_Abuse_Frequency'],
+        'Financial Difficulty': person['Financial_Difficulty'],
+        'Exercise (Days/Week)': person['Exercise_Days_Per_Week'],
+        'Exercise (Minutes/Day)': person['Exercise_Minutes_Per_Day'],
+        'Tobacco Use': person['Tobacco_Use_Frequency'],
+        'Prescription Drug Misuse': person['Prescription_Drug_Misuse'],
+        'Illegal Drug Use': person['Illegal_Drug_Use'],
+        'Recent Stress Frequency': person['Recent_Stress_Frequency'],
+        'Current Stress Level': person['Current_Stress_Level'],
+        'Cognitive Difficulty': person['Cognitive_Difficulty'],
+        'Errand Difficulty': person['Errand_Difficulty']
+    }
+    summary_df = pd.DataFrame(eda_summary.items(), columns=['Feature', 'Value'])
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        summary_df.to_excel(writer, index=False, sheet_name='PII Summary')
+    output.seek(0)
+    return dcc.send_bytes(output.read(), filename=f"PII_{selected_pii}_summary.xlsx")
+'''
+
+@app.callback(
+    Output('histogram', 'figure'),
+    Output('boxplot', 'figure'),
+    Input('feature_dropdown', 'value')
+)
+def update_full_summary_plots(feature):
+    if feature is None:
+        return go.Figure(), go.Figure()
+    hist_fig = px.histogram(df_ahcrm, x=feature, title=f"Distribution of {feature}", color_discrete_sequence=['#636EFA'])
+    box_fig = px.box(df_ahcrm, y=feature, title=f"Boxplot of {feature}", color_discrete_sequence=['#EF553B'])
+    return hist_fig, box_fig
 
 # Run the app
 if __name__ == "__main__":
