@@ -10,6 +10,7 @@ from wordCloud import generate_wordcloud
 from boxPlot import box_plot
 from bps_charts import generate_bps_figure, generate_sunburst_chart
 from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
+from assessmentThresholds import assessment_thresholds
 import json
 import os
 
@@ -160,6 +161,7 @@ totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 # Current date
 now = datetime.now()
 
+
 def ahcrm_assessment_layout():
     return html.Div([
         html.H2("PII Health & Stress Dashboard", style={'textAlign': 'center'}),
@@ -169,6 +171,7 @@ def ahcrm_assessment_layout():
         ]),
         html.Div(id='main-tabs-content')
     ])
+
 
 # Initialize the app with Bootstrap theme
 app = Dash(__name__,
@@ -284,72 +287,134 @@ app.layout = dbc.Container(
                                         ],
                                         style={"width": "50%", "margin": "auto"},
                                     ),
-                                    html.Div(
-                                        dash_table.DataTable(
-                                            id='assessment-scores',
-                                            data=df.to_dict('records'),
-                                            columns=[
-                                                {'name': 'Initial Group Identifier'
-                                                    , 'id': 'initial_group_identifier', 'type': 'text'},
-                                                {'name': 'Assessment Date'
-                                                    , 'id': 'assessment_date', 'type': 'datetime'},
-                                                {'name': 'WHO', 'id': 'WHO', 'type': 'numeric'},
-                                                {'name': 'GAD', 'id': 'GAD', 'type': 'numeric'},
-                                                {'name': 'PHQ', 'id': 'PHQ', 'type': 'numeric'},
-                                                {'name': 'PCL', 'id': 'PCL', 'type': 'numeric'},
-                                                {'name': 'DERS', 'id': 'DERS', 'type': 'numeric'},
-                                            ],
-                                            style_cell_conditional=[
-                                                {
-                                                    'if': {'column_id': c},
-                                                    'textAlign': 'left'
-                                                } for c in df.columns
-                                            ],
-                                            editable=True,
-                                            style_filter={'backgroundColor': 'black'},
-                                            style_cell={'backgroundColor': 'black', 'color': 'white',
-                                                        'fontSize': 16, 'font-family': 'sans-serif'},
-                                            style_header={
-                                                'backgroundColor': 'rgb(30, 30, 30)',
-                                                'color': 'white'
-                                            },
-                                            style_data={
-                                                'backgroundColor': 'rgb(50, 50, 50)',
-                                                'color': 'white'
-                                            },
-                                            page_size=10,
-                                            style_data_conditional=(
+                                    html.Div(children=[
+                                        html.Div(
+                                            dash_table.DataTable(
+                                                id='assessment-scores',
+                                                data=df.to_dict('records'),
+                                                columns=[
+                                                    {'name': 'Initial Group Identifier'
+                                                        , 'id': 'initial_group_identifier', 'type': 'text'},
+                                                    {'name': 'Assessment Date'
+                                                        , 'id': 'assessment_date', 'type': 'datetime'},
+                                                    {'name': 'WHO', 'id': 'WHO', 'type': 'numeric'},
+                                                    {'name': 'GAD', 'id': 'GAD', 'type': 'numeric'},
+                                                    {'name': 'PHQ', 'id': 'PHQ', 'type': 'numeric'},
+                                                    {'name': 'PCL', 'id': 'PCL', 'type': 'numeric'},
+                                                    {'name': 'DERS', 'id': 'DERS', 'type': 'numeric'},
+                                                ],
+                                                style_cell_conditional=[
+                                                    {
+                                                        'if': {'column_id': c},
+                                                        'textAlign': 'left'
+                                                    } for c in df.columns
+                                                ],
+                                                editable=True,
+                                                style_filter={'backgroundColor': 'black'},
+                                                style_cell={'backgroundColor': 'black', 'color': 'white',
+                                                            'fontSize': 16, 'font-family': 'sans-serif'},
+                                                style_header={
+                                                    'backgroundColor': 'rgb(30, 30, 30)',
+                                                    'color': 'white'
+                                                },
+                                                style_data={
+                                                    'backgroundColor': 'rgb(50, 50, 50)',
+                                                    'color': 'white'
+                                                },
+                                                page_size=10,
+                                                style_data_conditional=(
                                                     [
                                                         {
                                                             'if': {
-                                                                'filter_query': '0 < {{{}}} < {}'.format(col, value),
-                                                                'column_id': col
+                                                                'filter_query': '{} <= {{{}}} < {}'.format(
+                                                                    threshold_range[0], 'WHO', threshold_range[1]
+                                                                ),
+                                                                'column_id': 'WHO'
                                                             },
-                                                            'backgroundColor': '#FF4136',
-                                                            'color': 'white'
-                                                        } for col, value in zip(df[assessments].quantile(0.5).index,
-                                                                                df[assessments].quantile(
-                                                                                    0.5).to_numpy())
+                                                            'backgroundColor': color,
+                                                            'color': 'black'
+                                                        } for threshold_range, color in zip(
+                                                                assessment_thresholds['WHO']['ranges'],
+                                                                assessment_thresholds['WHO']['colors']
+                                                            )
                                                     ] +
                                                     [
                                                         {
                                                             'if': {
-                                                                'filter_query': '{{{}}} >= {}'.format(col, value),
+                                                                'filter_query': '{} <= {{{}}} < {}'.format(
+                                                                    threshold_range[0], 'GAD', threshold_range[1]
+                                                                ),
+                                                                'column_id': 'GAD'
+                                                            },
+                                                            'backgroundColor': color,
+                                                            'color': 'black'
+                                                        } for threshold_range, color in zip(
+                                                                assessment_thresholds['GAD']['ranges'],
+                                                                assessment_thresholds['GAD']['colors']
+                                                            )
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{} <= {{{}}} < {}'.format(
+                                                                    threshold_range[0], 'PHQ', threshold_range[1]
+                                                                ),
+                                                                'column_id': 'PHQ'
+                                                            },
+                                                            'backgroundColor': color,
+                                                            'color': 'black'
+                                                        } for threshold_range, color in zip(
+                                                                assessment_thresholds['PHQ']['ranges'],
+                                                                assessment_thresholds['PHQ']['colors']
+                                                            )
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{} <= {{{}}} < {}'.format(
+                                                                    threshold_range[0], 'PCL', threshold_range[1]
+                                                                ),
+                                                                'column_id': 'PCL'
+                                                            },
+                                                            'backgroundColor': color,
+                                                            'color': 'black'
+                                                        } for threshold_range, color in zip(
+                                                                assessment_thresholds['PCL']['ranges'],
+                                                                assessment_thresholds['PCL']['colors']
+                                                            )
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{} <= {{{}}} < {}'.format(
+                                                                    threshold_range[0], 'DERS', threshold_range[1]
+                                                                ),
+                                                                'column_id': 'DERS'
+                                                            },
+                                                            'backgroundColor': color,
+                                                            'color': 'black'
+                                                        } for threshold_range, color in zip(
+                                                                assessment_thresholds['DERS']['ranges'],
+                                                                assessment_thresholds['DERS']['colors']
+                                                            )
+                                                    ] +
+                                                    [
+                                                        {
+                                                            'if': {
+                                                                'filter_query': '{{{}}} is nil'.format(col),
                                                                 'column_id': col
                                                             },
-                                                            'backgroundColor': '#3D9970',
-                                                            'color': 'white'
-                                                        } for col, value in zip(df[assessments].quantile(0.5).index,
-                                                                                df[assessments].quantile(
-                                                                                    0.5).to_numpy())
+                                                            'backgroundColor': 'rgb(50, 50, 50)'
+                                                        } for col in assessment_thresholds.keys()
                                                     ]
+                                                )
                                             )
                                         ),
-                                        style={"width": "50%", "margin": "auto"},
-                                    ),
+
+                                    ], style={"width": "50%", "margin": "auto"}),
                                 ],
                                 width=12,
-                            )
+                            ),
                         ),
                     ],
                 ),
