@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 import numpy as np
+from assessmentThresholds import assessment_thresholds
 
 
 def time_series(df, assessment, patient_id, std_threshold=1.5):
@@ -69,8 +70,6 @@ def time_series(df, assessment, patient_id, std_threshold=1.5):
             marker=dict(
                 size=12,
                 color=filtered_df[assessment],
-                showscale=True,
-                colorbar=dict(title="Score Level"),
                 line=dict(width=2, color="DarkSlateGrey"),
             ),
             name=f"Assessment Scores",
@@ -101,80 +100,16 @@ def time_series(df, assessment, patient_id, std_threshold=1.5):
     fig.add_hline(
         y=upper_bound,
         line=dict(color="white", dash="dot", width=4),
-        annotation_text="Above Normal Range",
+        annotation_text="Above Usual Range",
         annotation_position="bottom right",
     )
 
     fig.add_hline(
         y=lower_bound,
         line=dict(color="white", dash="dot", width=4),
-        annotation_text="Below Normal Range",
+        annotation_text="Below Usual Range",
         annotation_position="top right",
     )
-
-    # Define assessment-specific thresholds
-    assessment_thresholds = {
-        "WHO": {
-            "ranges": [(0, 5), (5, 10), (10, 15), (15, 20), (20, 25)],
-            "labels": [
-                "Critical",
-                "High Concern",
-                "Moderate Concern",
-                "Low Concern",
-                "Healthy",
-            ],
-            "colors": [
-                "rgba(255,69,58,1)",  # Severe - Vibrant Red
-                "rgba(255,159,10,1)",  # Moderate - Vibrant Orange
-                "rgba(255,214,10,1)",  # Mild - Vibrant Yellow
-                "rgba(48,209,88,1)",  # Minimal - Vibrant Green
-                "rgba(0,122,255,1)",  # Well - Vibrant Blue
-            ],
-        },
-        "GAD": {
-            "ranges": [(0, 4), (4, 9), (9, 14), (14, 21)],
-            "labels": ["Minimal", "Mild", "Moderate", "Severe"],
-            "colors": [
-                "rgba(48,209,88,1)",  # Minimal - Vibrant Green
-                "rgba(90,200,250,1)",  # Mild - Light Blue
-                "rgba(255,214,10,1)",  # Moderate - Vibrant Yellow
-                "rgba(255,69,58,1)",  # Severe - Vibrant Red
-            ],
-        },
-        "PHQ": {
-            "ranges": [(0, 4), (4, 9), (9, 14), (14, 19), (19, 27)],
-            "labels": ["Minimal", "Mild", "Moderate", "Moderately Severe", "Severe"],
-            "colors": [
-                "rgba(48,209,88,1)",  # Minimal - Vibrant Green
-                "rgba(90,200,250,1)",  # Mild - Light Blue
-                "rgba(255,214,10,1)",  # Moderate - Vibrant Yellow
-                "rgba(255,159,10,1)",  # Moderately Severe - Vibrant Orange
-                "rgba(255,69,58,1)",  # Severe - Vibrant Red
-            ],
-        },
-        "PCL": {
-            "ranges": [(0, 20), (20, 30), (30, 45), (45, 60), (60, 80)],
-            "labels": ["Minimal", "Mild", "Moderate", "Severe", "Extreme"],
-            "colors": [
-                "rgba(48,209,88,1)",  # Minimal - Vibrant Green
-                "rgba(90,200,250,1)",  # Mild - Light Blue
-                "rgba(255,214,10,1)",  # Moderate - Vibrant Yellow
-                "rgba(255,159,10,1)",  # Severe - Vibrant Orange
-                "rgba(255,69,58,1)",  # Extreme - Vibrant Red
-            ],
-        },
-        "DERS": {
-            "ranges": [(0, 80), (80, 100), (100, 120), (120, 150), (150, 180)],
-            "labels": ["Normal", "Elevated", "High", "Very High", "Extreme"],
-            "colors": [
-                "rgba(48,209,88,1)",  # Normal - Vibrant Green
-                "rgba(90,200,250,1)",  # Elevated - Light Blue
-                "rgba(255,214,10,1)",  # High - Vibrant Yellow
-                "rgba(255,159,10,1)",  # Very High - Vibrant Orange
-                "rgba(255,69,58,1)",  # Extreme - Vibrant Red
-            ],
-        },
-    }
 
     # Get thresholds for the selected assessment
     thresholds = assessment_thresholds.get(assessment)
