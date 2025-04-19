@@ -11,6 +11,7 @@ from boxPlot import box_plot
 from bps_charts import generate_bps_figure, generate_sunburst_chart
 from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
 from assessmentThresholds import assessment_thresholds
+from ahcm_charts import generate_ahcm_barplot, generate_patient_summary_card
 import json
 import os
 
@@ -50,10 +51,38 @@ bps = pd.read_csv(os.path.join(data_directory, "bps_anonimized.csv"))
 php_daily = pd.read_csv(os.path.join(data_directory, "extracted_php_assessments.csv"))
 sub_history = pd.read_csv(os.path.join(data_directory, 'patient_substance_history.csv'))
 stat_tests_data = pd.read_csv(os.path.join(data_directory, 'stat_tests_data.csv'))
-df_ahcrm = pd.read_csv(os.path.join(data_directory, "ahcm_output_data_cleaned.csv"))
+ahcm_df = pd.read_csv(os.path.join(data_directory, "ahcm_survey_output.csv"))
 
-# ahcrm
-pii_ids = df_ahcrm['PII_ID'].unique()
+# Unique patient IDs
+ahcm_ids = ahcm_df['group_identifier'].unique()
+
+# Map for user-friendly ahcm column names
+ahcm_column_display_names = {
+    "living_situation" : "Living Situation",
+    "housing_problems" : "Housing Problems",
+    "food_insecurity_and_transport_issues" : "Food Insecurity or Transportation Issues",
+    "want_work_help" : "Want Work Help",
+    "need_daily_help" : "Need Daily Help",
+    "feel_lonely" : "Feel Lonely",
+    "non_english_at_home" : "English Not Spoken at Home",
+    "want_school_help" : "Want School Help",
+    "tobacco_use" : "Tobacco Use",
+    "illegal_drug_use_count" : "Illegal Drug Use",
+    "exercise_days_per_week": "Exercise Days per Week",
+    "exercise_minutes_per_day": "Exercise Minutes per Day",
+    "binge_drinking": "Binge Drinking Frequency",
+    "mental_health_score": "Mental Health Score",
+    "prescription_misuse" : "Prescription Misuse",
+    "financial_strain": "Financial Strain",
+    "abuse_physical": "Physical Abuse Frequency",
+    "abuse_verbal": "Verbal Abuse Frequency",
+    "abuse_threats": "Threats of Harm",
+    "abuse_yelling": "Yelling or Screaming Frequency",
+    "utility_shutoff_threat": "Utility Shutoff Threat",
+    "cognitive_difficulty": "Cognitive Difficulty",
+    "errand_difficulty": "Errand Difficulty",
+    "current_stress": "Current Stress Level"
+}
 
 # Cleaning data
 who = clean_df(who)
@@ -160,18 +189,6 @@ totals = [25.0, 21.0, 27.0, 80.0, 180.0]
 
 # Current date
 now = datetime.now()
-
-
-def ahcrm_assessment_layout():
-    return html.Div([
-        html.H2("PII Health & Stress Dashboard", style={'textAlign': 'center'}),
-        dcc.Tabs(id='main-tabs', value='tab-pii-summary', children=[
-            dcc.Tab(label='PII Summary View', value='tab-pii-summary'),
-            dcc.Tab(label='Full Dataset Summary', value='tab-full-summary')
-        ]),
-        html.Div(id='main-tabs-content')
-    ])
-
 
 # Initialize the app with Bootstrap theme
 app = Dash(__name__,
@@ -734,10 +751,75 @@ app.layout = dbc.Container(
                         ),
                     ],
                 ),
+                # AHCM Assessment Layout
                 dbc.Tab(
                     label="📉 AHCM Assessment",
-                    tab_id="tab-ahcrm-assessment",
-                    children=[ahcrm_assessment_layout()]
+                    tab_id="tab-ahcm-assessment",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                dcc.RadioItems(
+                                    id="ahcm-view-selection",
+                                    options=[
+                                        {"label": "All Patients", "value": "all"},
+                                        {"label": "Individual Patient", "value": "select"}
+                                    ],
+                                    value="all",
+                                    labelStyle={'display': 'inline-block', 'margin-right': '20px', 'fontSize': '20px'},
+                                    inputStyle={"margin-right": "10px"}
+                                ),
+                                width=6,
+                                className="mx-auto",
+                            ),
+                            style={"textAlign": "center"}
+                        ),
+                        html.Br(),
+                        html.Div(id="ahcm-all-container", children=[
+                            dbc.Row([
+                                dbc.Col([
+                                    html.Div([
+                                        html.Label("Select Column:", className="text-white"),
+                                        dcc.Dropdown(
+                                            id="ahcm-feature-dropdown",
+                                            options=[
+                                                {"label": ahcm_column_display_names.get(col, col), "value": col}
+                                                for col in ahcm_df.columns if col != 'group_identifier'
+                                            ],
+                                            value=[col for col in ahcm_df.columns if col != 'group_identifier'][0],
+                                            clearable=False,
+                                        )
+                                    ], style={"width": "50%", "margin": "auto"}),
+                                    html.Br(),
+                                    html.Div(
+                                        dcc.Graph(id='ahcm-barplot'),
+                                        style={"width": "60%", "margin": "auto"}  # 👈 Adjust width here
+                                    )
+                                ], width=12)
+                            ])
+                        ]),
+                    html.Div(id="ahcm-select-container", children=[
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div([
+                                    html.Label("Select Patient:", className="text-white"),
+                                    dcc.Dropdown(
+                                        id="ahcm-patient-dropdown",
+                                        options=[{"label": pid, "value": pid} for pid in ahcm_ids],
+                                        value=ahcm_ids[0],
+                                        clearable=False,
+                                    )
+                                ], style={"width": "50%", "margin": "auto"})  # 👈 wrap both inside here
+                            ])
+                        ]),
+                        html.Br(),
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div(id='ahcm-patient-details', style={'color': 'white', 'padding': '20px'})
+                            ], width=8, className="mx-auto")
+                        ])
+                    ])
+                    ]
                 )
             ],
             style={
@@ -960,110 +1042,31 @@ def update_program_box_plot(assessment):
 def update_discharge_box_plot(assessment):
     return box_plot(stat_tests_data, 'discharge_type', assessment)
 
+# Callbacks for AHCM 
+@app.callback(
+    [Output("ahcm-all-container", "style"), Output("ahcm-select-container", "style")],
+    [Input("ahcm-view-selection", "value")]
+)
+def toggle_ahcm_view(view):
+    if view == "all":
+        return {"display": "block"}, {"display": "none"}
+    else:
+        return {"display": "none"}, {"display": "block"}
 
 @app.callback(
-    Output('main-tabs-content', 'children'),
-    Input('main-tabs', 'value')
+    Output("ahcm-barplot", "figure"),
+    Input("ahcm-feature-dropdown", "value")
 )
-def render_main_tab(tab):
-    if tab == 'tab-pii-summary':
-        return html.Div([
-            html.Div([
-                html.Label("Select PII_ID: "),
-                dcc.Dropdown(
-                    id='pii-dropdown',
-                    options=[{'label': str(pii), 'value': pii} for pii in pii_ids],
-                    value=pii_ids[0],
-                    clearable=False,
-                    style={'width': '50%'}
-                ),
-            ], style={'padding': '20px'}),
-
-            dcc.Tabs(id='tabs', value='tab-categories', children=[
-                dcc.Tab(label='Health Categories', value='tab-categories')
-            ]),
-
-            html.Div(id='tabs-content')
-        ])
-
-    elif tab == 'tab-full-summary':
-        data = df_ahcrm.copy()
-        if 'PII_ID' in data.columns:
-            data = data.drop(columns=['PII_ID'])
-
-        return html.Div([
-            html.H1("Histogram and Boxplot of all columns", style={'textAlign': 'center'}),
-
-            html.Div([
-                html.Label("Select Feature:"),
-                dcc.Dropdown(
-                    id='feature_dropdown',
-                    options=[{'label': col, 'value': col} for col in data.columns],
-                    value=data.columns[0],
-                    clearable=False,
-                    style={'width': '50%'}
-                )
-            ], style={'padding': '20px'}),
-
-            html.Div([
-                dcc.Graph(id='histogram'),
-                dcc.Graph(id='boxplot')
-            ])
-        ])
-
-    return html.Div(["Unknown main tab"])
-
+def update_ahcm_barplot(feature):
+    label = ahcm_column_display_names.get(feature, feature)
+    return generate_ahcm_barplot(feature, label, ahcm_df)
 
 @app.callback(
-    Output('tabs-content', 'children'),
-    Input('tabs', 'value'),
-    Input('pii-dropdown', 'value')
+    Output("ahcm-patient-details", "children"),
+    Input("ahcm-patient-dropdown", "value")
 )
-def render_tab(tab, selected_pii):
-    person = df_ahcrm[df_ahcrm['PII_ID'] == selected_pii].squeeze()
-
-    if tab == 'tab-categories':
-        physical = ['Exercise_Days_Per_Week', 'Exercise_Minutes_Per_Day']
-        mental = ['Cognitive_Difficulty', 'Errand_Difficulty', 'Current_Stress_Level', 'Recent_Stress_Frequency']
-        substance = ['Tobacco_Use_Frequency', 'Prescription_Drug_Misuse', 'Illegal_Drug_Use']
-
-        def make_card(title, fields):
-            return html.Div([
-                html.H5(title),
-                html.Ul([html.Li(f"{field.replace('_', ' ')}: {person[field]}") for field in fields])
-            ], style={
-                'border': '1px solid #ccc',
-                'padding': '15px',
-                'margin': '10px',
-                'borderRadius': '10px',
-                'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
-            })
-
-        return html.Div([
-            html.Div([
-                make_card("Physical Health", physical),
-                make_card("Mental Health", mental),
-                make_card("Substance Use", substance)
-            ], style={'display': 'flex', 'flexWrap': 'wrap'})
-        ])
-
-    return html.Div(["Unknown tab"])
-
-
-@app.callback(
-    Output('histogram', 'figure'),
-    Output('boxplot', 'figure'),
-    Input('feature_dropdown', 'value')
-)
-def update_full_summary_plots(feature):
-    if feature is None:
-        return go.Figure(), go.Figure()
-
-    hist_fig = px.histogram(df_ahcrm, x=feature, title=f"Distribution of {feature}",
-                            color_discrete_sequence=['#636EFA'])
-    box_fig = px.box(df_ahcrm, y=feature, title=f"Boxplot of {feature}",
-                     color_discrete_sequence=['#EF553B'])
-    return hist_fig, box_fig
+def update_ahcm_patient_summary(pid):
+    return generate_patient_summary_card(ahcm_df, pid)
 
 
 
