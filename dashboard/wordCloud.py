@@ -7,7 +7,7 @@ import base64
 def generate_wordcloud(text, title, colormap):
     plt.switch_backend('agg')  # Switch to non-interactive backend
     custom_stopwords = STOPWORDS.union({"want", "desire"})
-    wc = WordCloud(width=400, height=200, background_color='white'
+    wc = WordCloud(width=800, height=500, background_color='white'
                    , colormap=colormap, stopwords=custom_stopwords).generate(text)
     fig, ax = plt.subplots()
     ax.imshow(wc, interpolation='bilinear')

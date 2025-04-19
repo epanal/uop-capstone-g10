@@ -96,11 +96,11 @@ external_wc = generate_wordcloud(all_external_motivation, "External Motivation",
 # program type pie chart
 program_pie = px.pie(stat_tests_data, names='program',
                      title='Program Types', hole=0.3)
-program_pie.update_layout(title_text='Program Types', title_x=0.5)
+program_pie.update_layout(title_text='Program Types', title_x=0.5, template="plotly_dark")
 # discharge type pie chart
 discharge_pie = px.pie(stat_tests_data, names='discharge_type',
                        title='Discharge Types', hole=0.3)
-discharge_pie.update_layout(title_text='Discharge Types', title_x=0.5)
+discharge_pie.update_layout(title_text='Discharge Types', title_x=0.5, template="plotly_dark")
 
 # df for rows where use_flag = 1
 used_substances = sub_history[sub_history['use_flag'] == 1]
@@ -221,12 +221,12 @@ app.layout = dbc.Container(
                         dbc.Row([
                             dbc.Col([
                                 html.Img(src=f"data:image/png;base64,{internal_wc}",
-                                         style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
-                            ], width={"size": 4}, align="center"),
+                                         style={'width': '100%', 'height': '100%', 'borderRadius': '8px'})
+                            ], width={"size": 5}, align="center"),
                             dbc.Col([
                                 html.Img(src=f"data:image/png;base64,{external_wc}",
-                                         style={'width': '100%', 'height': 'auto', 'borderRadius': '8px'})
-                            ], width={"size": 4}, align="center")
+                                         style={'width': '100%', 'height': '100%', 'borderRadius': '8px'})
+                            ], width={"size": 5}, align="center")
                         ], align="center", justify="center"),
                         html.Br(),
                         html.Div(
@@ -278,15 +278,7 @@ app.layout = dbc.Container(
                                         ],
                                         style={"width": "50%", "margin": "auto"},
                                     ),
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Select Patient:",
-                                                className="text-white",
-                                            ),
-                                        ],
-                                        style={"width": "50%", "margin": "auto"},
-                                    ),
+                                    html.Br(),
                                     html.Div(children=[
                                         html.Div(
                                             dash_table.DataTable(
@@ -416,6 +408,7 @@ app.layout = dbc.Container(
                                 width=12,
                             ),
                         ),
+                        html.Br(),
                     ],
                 ),
                 # Spider Chart Tab
@@ -445,6 +438,7 @@ app.layout = dbc.Container(
                                         ],
                                         style={"width": "50%", "margin": "auto"},
                                     ),
+                                    html.Br(),
                                     html.Div(
                                         dcc.Graph(
                                             id="spider-chart",
@@ -459,6 +453,49 @@ app.layout = dbc.Container(
                                 width=12,
                             )
                         ),
+                        html.Br(),
+                    ],
+                ),
+                # Assessment Scores by Program and Discharge type
+                dbc.Tab(
+                    label= "📦 Box-Plots",
+                    tab_id="tab-6",
+                    children=[
+                        html.Br(),
+                        dbc.Row(
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Label(
+                                                "Select Assessment:",
+                                                className="text-white",
+                                            ),
+                                            dcc.Dropdown(
+                                                id="box-assessment-select",
+                                                options=[
+                                                    {"label": name, "value": name}
+                                                    for name in assessments
+                                                ],
+                                                value=assessments[0],
+                                                clearable=False,
+                                            ),
+                                        ],
+                                        style={"width": "50%", "margin": "auto"},
+                                    ),
+                                ], width=12,
+                            )
+                        ),
+                        html.Br(),
+                        dbc.Row([
+                            dbc.Col([
+                                dcc.Graph(id='program-box-plot',style={'width': '90%', 'height': '60%'})
+                            ], width={"size": 5}),
+                            dbc.Col([
+                                dcc.Graph(id='discharge-box-plot',style={'width': '90%', 'height': '60%'})
+                            ], width={"size": 5})
+                        ], align="center", justify="center"),
+                        html.Br(),
                     ],
                 ),
                 # Line Chart Tab
@@ -550,6 +587,7 @@ app.layout = dbc.Container(
                                 width=12,
                             )
                         ),
+                        html.Br(),
                     ],
                 ),
                 # Biopsychosocial Assessment Tab with Toggle
@@ -630,6 +668,7 @@ app.layout = dbc.Container(
                                         className="mx-auto"
                                     )
                                 ),
+                                html.Br(),
                             ]
                         ),
                     ]
@@ -693,47 +732,6 @@ app.layout = dbc.Container(
                                 width=12,
                             )
                         ),
-                    ],
-                ),
-                # Assessment Scores by Program and Discharge type
-                dbc.Tab(
-                    label= "📦 Box-Plots",
-                    tab_id="tab-6",
-                    children=[
-                        html.Br(),
-                        dbc.Row(
-                            dbc.Col(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Select Assessment:",
-                                                className="text-white",
-                                            ),
-                                            dcc.Dropdown(
-                                                id="box-assessment-select",
-                                                options=[
-                                                    {"label": name, "value": name}
-                                                    for name in assessments
-                                                ],
-                                                value=assessments[0],
-                                                clearable=False,
-                                            ),
-                                        ],
-                                        style={"width": "50%", "margin": "auto"},
-                                    ),
-                                ], width=12,
-                            )
-                        ),
-                        html.Br(),
-                        dbc.Row([
-                            dbc.Col([
-                                dcc.Graph(id='program-box-plot',style={'width': '90%', 'height': '60%'})
-                            ], width={"size": 5}),
-                            dbc.Col([
-                                dcc.Graph(id='discharge-box-plot',style={'width': '90%', 'height': '60%'})
-                            ], width={"size": 5})
-                        ], align="center", justify="center")
                     ],
                 ),
                 dbc.Tab(
@@ -865,14 +863,16 @@ def update_bps_content(patient_id):
                                    className="text-white")
 
     return html.Div([
-        html.H4("Patient Overview", className="text-white bg-dark p-2 rounded"),
+        html.H4("Patient Overview", className="text-white bg-dark p-2 rounded", style={'textAlign': 'center'}),
         html.P(f"Patient ID: {patient_info['group_identifier']}", className="text-white"),
         html.P(f"Age: {patient_info['age']}", className="text-white"),
         html.P(f"Internal Motivation: {patient_info['int_motivation']}", className="text-white"),
         html.P(f"External Motivation: {patient_info['ext_motivation']}", className="text-white"),
-        html.H4("Substance Use History", className="text-white bg-dark p-2 rounded mt-4"),
+        html.H4("Substance Use History", className="text-white bg-dark p-2 rounded mt-4",
+                style={'textAlign': 'center'}),
         sub_history_table,
-        html.H4("Biopsychosocial Scores", className="text-white bg-dark p-2 rounded mt-4"),
+        html.H4("Biopsychosocial Scores", className="text-white bg-dark p-2 rounded mt-4",
+                style={'textAlign': 'center'}),
         html.Div([
             html.Span(f"Patient's Total: {round(patient_ban, 2)}", style={'color': '#FF5722', 'margin-right': '20px'}),
             html.Span(f"Average Total (All Patients): {round(total_bps_avg, 1)}", style={'color': '#00BCD4'})
@@ -895,32 +895,33 @@ def update_php_assessment(selected_patient_id, category):
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'mood')
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's common moods:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.H4("Patient's common moods:", className="text-white bg-dark p-2 rounded",
+                        style={'textAlign': 'center'}),
                 html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
-            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+            style={"width": "50%", "margin": "auto"},
         )
     elif category == "Supports":
         fig = sparkline_figure(php_daily, selected_patient_id, 'supports')
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'support')
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's support keywords:", className="text-white text-center",
-                        style={'marginBottom': '50px'}),
+                html.H4("Patient's support keywords:", className="text-white bg-dark p-2 rounded",
+                        style={'textAlign': 'center'}),
                 html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
-            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+            style={"width": "50%", "margin": "auto"},
         )
     elif category == "Skills":
         fig = sparkline_figure(php_daily, selected_patient_id, 'skills')
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id, 'skill')
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's skills keywords:", className="text-white text-center",
-                        style={'marginBottom': '50px'}),
+                html.H4("Patient's skills keywords:", className="text-white bg-dark p-2 rounded",
+                        style={'textAlign': 'center'}),
                 html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
-            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+            style={"width": "50%", "margin": "auto"},
         )
     elif category == "Craving":
         fig = craving_line_chart(php_daily, selected_patient_id)
@@ -931,10 +932,11 @@ def update_php_assessment(selected_patient_id, category):
         wordcloud_img_path = wordcloud_figure(php_daily, selected_patient_id)
         wordcloud_component = html.Div(
             [
-                html.H4("Patient's common words:", className="text-white text-center", style={'marginBottom': '50px'}),
+                html.H4("Patient's common words:", className="text-white bg-dark p-2 rounded",
+                        style={'textAlign': 'center'}),
                 html.Img(src=wordcloud_img_path, style={'maxWidth': '80%', 'margin': '0 auto', 'display': 'block'}),
             ],
-            style={'textAlign': 'center', 'marginTop': '50px', 'marginBottom': '50px'},
+            style={"width": "50%", "margin": "auto"},
         )
 
     assessment_graph = dcc.Graph(figure=fig)
