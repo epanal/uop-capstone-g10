@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 name_mapping = dict()
 
-SECRET_KEY = "Exist_8&Z@y3@Vzn$ve6"
+SECRET_KEY = "XXXXXXXXXXXXXXXXX"
 
 def pseudonymize_function(patient_id):
     if patient_id not in name_mapping:
