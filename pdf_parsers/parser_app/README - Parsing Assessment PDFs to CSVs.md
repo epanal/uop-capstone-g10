@@ -4,25 +4,39 @@
 
 ## 🔍 What This App Is
 
-A simple desktop tool to extract structured data from PDF assessments. This data will be used for tabs in the Exist dashboard that utilize data from pdf files.
+A simple desktop tool to extract structured data from PDF assessments. This data will be used for tabs in the Exist dashboard that utilize data from PDF files.
 
 ---
 
 ## 🚀 How to Use the App
 
 ### 1. **Open the App**
-Launch the app by double-clicking `exist_pdf_parsers.exe` (or running the exist_pdf_parsers.py Python script). It may take a few minutes for the application to load.
+Launch the app by double-clicking `exist_pdf_parsers.exe` (or running the `exist_pdf_parsers.py` Python script). It may take a few minutes for the application to load.
 
 ---
 
 ### 2. **Choose a Parser Type**
-Select one of the following options depending on the type of PDF you're working with:
+Select one of the following options depending on which section or type of assessment from the partial casefile you would like to extract:
 
-- **Daily Clinical Card**
-- **PHP Daily Assessments**
-- **Biopsychosocial Assessments**
-- **Substance Abuse History**
-- **AHCM Survey**
+- **Daily Clinical Card**  
+  Parses tables of emotional states, supports, and coping skills.  
+  **Output:** `group_identifier`, `assessment_date`, plus category prefixes like `emo_*`, `sup_*`, `cop_*`.
+
+- **PHP Daily Assessments**  
+  Detects keywords for emotions, skills, supports, and craving levels from daily notes.  
+  **Output:** Keyword match columns, `Craving` score, and one-hot flags for common responses.
+
+- **Biopsychosocial Assessments**  
+  Extracts motivation statements, biopsychosocial scores, age, drug history, and treatment count.  
+  **Output:** `group_identifier`, `assmt_dt`, `age`, `int_motivation`, `bps_*`, `drugs_of_choice`, etc.
+
+- **Substance Abuse History**  
+  Pulls structured tables of substance use: type and usage pattern.  
+  **Output:** One row per substance with `use_flag`, `pattern_of_use`, and normalized category.
+
+- **AHC HRSN Survey**  
+  Extracts responses to the AHC social risk questionnaire and cleans data for analysis.  
+  **Output:** `group_identifier`, survey answers (e.g., `living_situation`, `financial_strain`, `abuse_*`), and standardized risk indicators.
 
 ---
 
@@ -32,7 +46,7 @@ Click **“Select Input Folder”** and choose the folder containing your PDF fi
 ---
 
 ### 4. **Select Output Folder**
-Click **“Select Output Folder”** to specify where your results should be saved. 
+Click **“Select Output Folder”** to specify where your results should be saved.
 
 ---
 
