@@ -59,21 +59,25 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 
 ### ✅ **Welcome!**
 - Displays word clouds of all patient internal and external motivations.
-- Pie charts showing distributions across program types and discharge types.
+  - Larger words indicate more frequent occurrences of those words in patients' responses.
+- Pie charts showing distributions of patients across program types and discharge types.
 
 ### 🔢 **Assessment Scores**
 - View industry-standard assessment scores (WHO, GAD, PHQ, PCL, DERS) by patient and date.
-- Color-coded by severity using preset thresholds.
+- Color-coded by severity using preset thresholds. Green indicating the least severe and red indicating the most severe.
 
 ### 🕸️ **Spider Chart**
 - Visual comparison of a single patient’s industry-standard assessment scores across all categories in a radar-style plot.
+  - The blue chart is the average of all patients' assessment scores.
+  - The red chart is the average of a single patients' assessment scores.
+
+### 📦 **Box-Plots**
+- Compare the distributions of assesment scores across program types or discharge types using box plots.
 
 ### 📈 **Risk Analysis**
 - View a line chart of any single assessment over time for a selected patient.
 - Set custom standard deviation thresholds to highlight high-risk changes.
-
-### 📦 **Box-Plots**
-- Compare scores across program types or discharge types using box plots.
+- Also view the general trend of assessment scores over time.
 
 ### 🏥 **Biopsychosocial Assessment**
 - Toggle between a sunburst chart (all patients) or detailed view (individual patient).
