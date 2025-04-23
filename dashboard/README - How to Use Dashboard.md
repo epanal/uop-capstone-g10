@@ -51,7 +51,7 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 - Navigate to the **Assessments** tab in the Kipu portal.
 - Select a client and click **Generate the PDF Package** to compile a partial casefile.
 - Once generated, go to the **Downloads** section (top-right) and save the PDF locally.
-- These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Downloading%20Assessment%20PDFs.md](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md))
+- These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md))
 
 ---
 
