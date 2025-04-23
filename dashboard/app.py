@@ -11,7 +11,7 @@ from boxPlot import box_plot
 from bps_charts import generate_bps_figure, generate_sunburst_chart
 from php_daily import sparkline_figure, wordcloud_figure, craving_line_chart
 from assessmentThresholds import assessment_thresholds
-from ahcm_charts import generate_ahcm_barplot, generate_patient_summary_card
+from ahcm_charts import generate_ahcm_barplot, generate_patient_summary_table
 import json
 import os
 
@@ -1066,7 +1066,7 @@ def update_ahcm_barplot(feature):
     Input("ahcm-patient-dropdown", "value")
 )
 def update_ahcm_patient_summary(pid):
-    return generate_patient_summary_card(ahcm_df, pid)
+    return generate_patient_summary_table(ahcm_df, pid)
 
 
 
