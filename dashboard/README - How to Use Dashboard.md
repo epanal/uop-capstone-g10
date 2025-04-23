@@ -24,6 +24,11 @@ This dashboard provides an interactive view of patient assessment data collected
      ```
    - This will launch the dashboard in your web browser (typically at `http://127.0.0.1:8050`).
 
+### Dependencies
+- All data used in the app.py file should be located in a single folder. The directory to that folder should be listed in a config.json file in the same directory as the app.py file. The instructions for obtaining new data files will be explained in the next section.
+- The app.py file depends on many python libraries such as plotly.express and pandas. These can all be installed using pip.
+- There are also custom python files we created for the app. All such files are in [this directory](https://github.com/epanal/uop-capstone-g10/tree/main/dashboard) and should be downloaded to the same directory as the app.py file.
+
 ---
 
 ## 📁 Data Requirements
