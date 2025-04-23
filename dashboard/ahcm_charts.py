@@ -1,6 +1,6 @@
 import plotly.express as px
 import pandas as pd
-from dash import html
+from dash import html, dash_table
 
 # Mapping for user-friendly display names
 ahcm_column_display_names = {
@@ -57,36 +57,65 @@ def generate_ahcm_barplot(column, label, df):
     return fig
 
 
-def generate_patient_summary_card(df, group_identifier):
+def generate_patient_summary_table(df, group_identifier):
     row = df[df['group_identifier'] == group_identifier].squeeze()
 
     category_mapping = {
         "Physical Health": ["exercise_days_per_week", "exercise_minutes_per_day"],
-        "Mental Health": ["mental_health_score","cognitive_difficulty", "errand_difficulty", "current_stress"],
+        "Mental Health": ["mental_health_score", "cognitive_difficulty", "errand_difficulty", "current_stress"],
         "Substance Use": ["tobacco_use", "prescription_misuse", "illegal_drug_use_count"],
         "Basic Needs": ["financial_strain", "living_situation", "housing_problems", "food_insecurity_and_transport_issues", "utility_shutoff_threat"],
         "Safety": ["abuse_physical", "abuse_verbal", "abuse_threats", "abuse_yelling"],
         "Social Support": ["non_english_at_home", "feel_lonely", "need_daily_help", "want_work_help", "want_school_help"],
     }
 
-    cards = []
+    table_data = []
     for category, fields in category_mapping.items():
-        items = [
-            html.Li(f"{ahcm_column_display_names.get(field, field)}: {row.get(field, 'N/A') if pd.notna(row.get(field, 'N/A')) else 'N/A'}")
-            for field in fields
-        ]
-        cards.append(html.Div([
-            html.H5(category, className="text-white bg-dark p-2 rounded"),
-            html.Ul(items, style={"fontSize": "18px"})
-        ], style={
-            'border': '1px solid #ccc',
-            'padding': '15px',
-            'margin': '10px',
-            'borderRadius': '10px',
-            'boxShadow': '0 2px 5px rgba(0,0,0,0.1)'
-        }))
+        for field in fields:
+            response = row.get(field, "N/A")
+            display_name = ahcm_column_display_names.get(field, field.replace("_", " ").title())
+            table_data.append({
+                "Category": category,
+                "Field": display_name,
+                "Response": response if pd.notna(response) else "N/A"
+            })
 
-    return html.Div([
-        html.H4("AHCM Summary", className="text-white bg-dark p-2 rounded text-center"),
-        html.Div(cards, style={'display': 'flex', 'flexWrap': 'wrap'})
-    ])
+    return dash_table.DataTable(
+        data=table_data,
+        columns=[
+            {"name": "Category", "id": "Category"},
+            {"name": "Field", "id": "Field"},
+            {"name": "Response", "id": "Response"}
+        ],
+        style_cell={
+            'textAlign': 'left',
+            'padding': '10px',
+            'whiteSpace': 'normal',
+            'height': 'auto',
+            'fontFamily': 'Arial',
+            'backgroundColor': '#000000',
+            'color': '#FFFFFF'
+        },
+        style_header={
+            'backgroundColor': '#222222',
+            'color': 'white',
+            'fontWeight': 'bold',
+            'fontSize': '16px'
+        },
+        style_data_conditional=[
+            {'if': {'filter_query': '{Category} = "Physical Health"'}, 'backgroundColor': '#AEDFF7', 'color': 'black'},
+            {'if': {'filter_query': '{Category} = "Mental Health"'}, 'backgroundColor': '#FFE0B2', 'color': 'black'},
+            {'if': {'filter_query': '{Category} = "Substance Use"'}, 'backgroundColor': '#F8BBD0', 'color': 'black'},
+            {'if': {'filter_query': '{Category} = "Basic Needs"'}, 'backgroundColor': '#C8E6C9', 'color': 'black'},
+            {'if': {'filter_query': '{Category} = "Safety"'}, 'backgroundColor': '#FFF9C4', 'color': 'black'},
+            {'if': {'filter_query': '{Category} = "Social Support"'}, 'backgroundColor': '#B3E5FC', 'color': 'black'},
+            {
+                'if': {'state': 'active'},
+                'backgroundColor': '#D3D3D3',
+                'color': 'black',
+                'border': '1px solid #666'
+            }
+        ],
+        style_table={'overflowX': 'auto'},
+        page_size=len(table_data)
+    )

@@ -508,9 +508,16 @@ def process_ahcm_pdfs(input_folder):
     def clean_living_situation(val):
         if not isinstance(val, str):
             return val
-        if "do not have a steady place to live" in val:
-            return "I do not have a steady place to live"
-        return val.strip()
+        val = val.strip().lower()
+
+        if 'steady place to live' in val and 'worried' not in val:
+            return 'Stable housing'
+        elif 'worried about losing it' in val:
+            return 'Unstable housing'
+        elif 'do not have a steady place to live' in val:
+            return 'Homeless or temporary'
+        
+        return val  # fallback
 
     def extract_binge_frequency(text):
         if not isinstance(text, str):
@@ -611,7 +618,7 @@ def process_ahcm_pdfs(input_folder):
 
         # Replace internal quote-separated values with '//' delimiter
         final_df.replace(to_replace=r' " ', value=' // ', regex=True, inplace=True)
-        
+
         # Clean 'housing_problems' column: remove periods and trim whitespace
         if 'housing_problems' in final_df.columns:
             final_df['housing_problems'] = final_df['housing_problems'].str.replace('.', '', regex=False).str.strip()
