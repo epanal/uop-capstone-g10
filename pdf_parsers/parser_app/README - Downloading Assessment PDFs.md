@@ -29,5 +29,5 @@ Once the PDF has finished generating:
 
 ## ⚠️ Important Notes
 
-- The parser program identifies each patient using the **LO number** in the filename (e.g., `_LO-2024-005_`).
+- The parser program identifies each patient using the **LO number** in the filename (e.g., `LO-2024-5`).
 - This ID is **anonymized** into a `group_identifier` in the output CSVs and dashboard to protect patient confidentiality.
