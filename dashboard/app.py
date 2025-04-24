@@ -32,11 +32,11 @@ def clean_df(df):
     # Calculate assessment scores
     df['score'] = df.iloc[:, 3:].sum(axis=1)
     # Sort rows based on assessment date at the hour
-    df = df.sort_values(['initial_group_identifier', 'assessment_date'])
+    df = df.sort_values(['group_identifier', 'assessment_date'])
     # Round assessment date to the day
     df['assessment_date'] = df['assessment_date'].dt.round('d')
     # Drop extra rows from days patients did multiple assessments
-    df = df.drop_duplicates(subset=['initial_group_identifier', 'assessment_date'], keep='last')
+    df = df.drop_duplicates(subset=['group_identifier', 'assessment_date'], keep='last')
     return df
 
 
@@ -153,36 +153,36 @@ used_substances_grouped['percentage'] = (used_substances_grouped['count'] / tota
 sunburst_fig = generate_sunburst_chart(used_substances_grouped, total_patients)
 
 # Combine all industry standard assessment data into one dataframe
-cols = ["initial_group_identifier", "assessment_date", "score"]
+cols = ["group_identifier", "assessment_date", "score"]
 assessments = ["WHO", "GAD", "PHQ", "PCL", "DERS"]
 
 df = who[cols].merge(
     gad[cols],
     how="outer",
-    on=["initial_group_identifier", "assessment_date"],
+    on=["group_identifier", "assessment_date"],
     suffixes=("_WHO", "_GAD"),
 )
 df = df.merge(
     phq[cols],
     how="outer",
-    on=["initial_group_identifier", "assessment_date"],
+    on=["group_identifier", "assessment_date"],
     suffixes=(None, "_PHQ"),
 )
 df = df.merge(
     pcl[cols],
     how="outer",
-    on=["initial_group_identifier", "assessment_date"],
+    on=["group_identifier", "assessment_date"],
     suffixes=(None, "_PCL"),
 )
 df = df.merge(
     ders[cols],
     how="outer",
-    on=["initial_group_identifier", "assessment_date"],
+    on=["group_identifier", "assessment_date"],
     suffixes=(None, "_DERS"),
 )
-df.columns = ["initial_group_identifier", "assessment_date"] + assessments
+df.columns = ["group_identifier", "assessment_date"] + assessments
 
-scores = df.groupby("initial_group_identifier")[assessments].mean()
+scores = df.groupby("group_identifier")[assessments].mean()
 
 # Total possible score for each assessment
 totals = [25.0, 21.0, 27.0, 80.0, 180.0]
@@ -284,11 +284,11 @@ app.layout = dbc.Container(
                                                 options=[
                                                     {"label": pid, "value": pid}
                                                     for pid in df[
-                                                        "initial_group_identifier"
+                                                        "group_identifier"
                                                     ].unique()
                                                 ],
                                                 value=df[
-                                                    "initial_group_identifier"
+                                                    "group_identifier"
                                                 ].unique()[0],
                                                 clearable=False,
                                             ),
@@ -303,7 +303,7 @@ app.layout = dbc.Container(
                                                 data=df.to_dict('records'),
                                                 columns=[
                                                     {'name': 'Initial Group Identifier'
-                                                        , 'id': 'initial_group_identifier', 'type': 'text'},
+                                                        , 'id': 'group_identifier', 'type': 'text'},
                                                     {'name': 'Assessment Date'
                                                         , 'id': 'assessment_date', 'type': 'datetime'},
                                                     {'name': 'WHO', 'id': 'WHO', 'type': 'numeric'},
@@ -535,11 +535,11 @@ app.layout = dbc.Container(
                                                 options=[
                                                     {"label": pid, "value": pid}
                                                     for pid in df[
-                                                        "initial_group_identifier"
+                                                        "group_identifier"
                                                     ].unique()
                                                 ],
                                                 value=df[
-                                                    "initial_group_identifier"
+                                                    "group_identifier"
                                                 ].unique()[0],
                                                 clearable=False,
                                             ),
@@ -841,7 +841,7 @@ app.layout = dbc.Container(
 def update_data_table(patient_id):
     table_data = df.copy()
     table_data['assessment_date'] = table_data['assessment_date'].dt.strftime('%Y-%m-%d')
-    return table_data[table_data.initial_group_identifier == patient_id].to_dict('records')
+    return table_data[table_data.group_identifier == patient_id].to_dict('records')
 
 
 # Callbacks for Spider Chart
