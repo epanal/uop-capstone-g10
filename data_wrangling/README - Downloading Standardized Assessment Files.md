@@ -27,7 +27,7 @@ Begin by creating the following six folders in your working directory. These wil
 ### 3. **Export a Single Assessment Type**
   1. Choose one assessment type to export (e.g., who, gad, phq, etc.)
      
-    *NOTE: Only one CSV file per assessment type is needed. Each file includes all responses across all assessment dates for that type.*
+    NOTE: Only one CSV file per assessment type is needed. Each file includes all responses across all assessment dates for that type.
   3. Click into the selected assessment.
   4. Navigate to **"Issues Report"** tab.
   5. Export the data by selecting **"Export to CSV"**.
