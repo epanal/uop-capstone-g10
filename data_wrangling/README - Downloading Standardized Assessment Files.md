@@ -19,7 +19,7 @@ Begin by creating the following six folders in your working directory. These wil
 
 ### 2. **Access Kipu Outcomes Measurement**
   1. Log in to the Kipu EMR system.
-  2. Navigate to the "Outcomes Measurement" tab.
+  2. Navigate to the **"Outcomes Measurement"** tab.
   3. Use the **search bar** to enter the patient's full name.
   4. Filter the results by selecting **Status: "Evaluated"** to ensure only completed assessments are shown.
   5. A list of all completed assessments will appear.
@@ -41,5 +41,5 @@ Rename the downloaded CSV file using the following format:
 - `YYYYMMDD`: The date of the **first recorded assessment** of that type
 
 ### 5. **Organize the File**
-  1. Move the renamed file into the appropiate folder based on its assessment type:
+  1. Move the renamed file into the appropiate folder based on its assessment type.
   2. Repeat this process for other assessment types. At most, you should export one file per asasessment type per patient, with a maximum of six files per patient.
