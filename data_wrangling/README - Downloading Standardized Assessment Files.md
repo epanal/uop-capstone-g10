@@ -50,3 +50,16 @@ Rename the downloaded CSV file using the following format:
 ### 5. **Organize the File**
   1. Move the renamed file into the appropiate folder based on its assessment type.
   2. Repeat this process for other assessment types. At most, you should export one file per assessment type per patient, with a maximum of six files per patient.
+
+---
+
+## ⚠️ For Patients with Multiple MR#s (Multiple Programs)
+
+  1. Navigate to the **Clients** tab in Kipu.
+  2. Use the **search bar** to enter the patient MR#.
+  3. Click on the appropriate patient profile.
+  4. Navigate to the **MBOs** tab.
+  5. Set the **Status** filter to **"Evaluated"**.
+  6. Select one assessment type, open the **Issues Report**, and click **"Export to CSV"**.
+  7. Follow the same **renaming** and **folder organization** process as described above.
+  8. Repeat the steps above per MR#.
