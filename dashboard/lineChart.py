@@ -18,7 +18,7 @@ def time_series(df, assessment, patient_id, std_threshold=1.5):
     """
     # Filter data for the selected assessment and patient
     filtered_df = df[
-        (df["initial_group_identifier"] == patient_id) & (df[assessment].notna())
+        (df["group_identifier"] == patient_id) & (df[assessment].notna())
     ].sort_values("assessment_date")
 
     # Calculate statistics
