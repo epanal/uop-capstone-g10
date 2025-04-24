@@ -16,6 +16,7 @@ Begin by creating the following six folders in your working directory. These wil
 - ders
 - ders2
 
+---
 
 ### 2. **Access Kipu Outcomes Measurement**
   1. Log in to the Kipu EMR system.
@@ -23,6 +24,8 @@ Begin by creating the following six folders in your working directory. These wil
   3. Use the **search bar** to enter the patient's full name.
   4. Filter the results by selecting **Status: "Evaluated"** to ensure only completed assessments are shown.
   5. A list of all completed assessments will appear.
+
+---
 
 ### 3. **Export a Single Assessment Type**
   1. Choose one assessment type to export (e.g., who, gad, phq, etc.)
@@ -32,6 +35,8 @@ Begin by creating the following six folders in your working directory. These wil
   4. Navigate to **"Issues Report"** tab.
   5. Export the data by selecting **"Export to CSV"**.
 
+---
+
 ### 4. **Rename the Exported File**
 Rename the downloaded CSV file using the following format:
 
@@ -39,6 +44,8 @@ Rename the downloaded CSV file using the following format:
 - `assessment_name`: The name of the assessment type (e.g., who, gad, phq, etc.)
 - `MR#`: The patient's medical record number (e.g., LO-XXXX-XX)
 - `YYYYMMDD`: The date of the **first recorded assessment** of that type
+
+---
 
 ### 5. **Organize the File**
   1. Move the renamed file into the appropiate folder based on its assessment type.
