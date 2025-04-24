@@ -42,11 +42,11 @@ Rename the downloaded CSV file using the following format:
 
 `[assessment_name]_[MR#]_[YYYYMMDD].csv`
 - `assessment_name`: The name of the assessment type (e.g., who, gad, phq, etc.)
-- `MR#`: The patient's medical record number (e.g., LO-XXXX-XX)
+- `MR#`: The patient's medical record number (e.g., LO-2025-8)
 - `YYYYMMDD`: The date of the **first recorded assessment** of that type
 
 ---
 
 ### 5. **Organize the File**
   1. Move the renamed file into the appropiate folder based on its assessment type.
-  2. Repeat this process for other assessment types. At most, you should export one file per asasessment type per patient, with a maximum of six files per patient.
+  2. Repeat this process for other assessment types. At most, you should export one file per assessment type per patient, with a maximum of six files per patient.
