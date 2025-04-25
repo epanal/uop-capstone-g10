@@ -4,3 +4,4 @@
 !.gitignore
 
 !pdf_parsers/
+.DS_Store
