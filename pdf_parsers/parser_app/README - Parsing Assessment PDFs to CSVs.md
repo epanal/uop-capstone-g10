@@ -19,7 +19,7 @@ Launch the app by double-clicking `exist_pdf_parsers.exe` (or running the `exist
 Select one of the following options depending on which section or type of assessment from the partial casefile you would like to extract:
 
 - **Daily Clinical Card**  
-  Parses tables of emotional states, supports, and coping skills.  
+  Parses tables of emotional states, supports, and coping skills. This data is not currently in the dashboard, but was developed for future use in parsing the "new" format. 
   **Output:** `group_identifier`, `assessment_date`, plus category prefixes like `emo_*`, `sup_*`, `cop_*`.
 
 - **PHP Daily Assessments**  
@@ -27,11 +27,11 @@ Select one of the following options depending on which section or type of assess
   **Output:** Keyword match columns, `Craving` score, and one-hot flags for common responses.
 
 - **Biopsychosocial Assessments**  
-  Extracts motivation statements, biopsychosocial scores, age, drug history, and treatment count.  
+  Extracts motivation statements, biopsychosocial scores, age, drug history, and treatment count. This is one of the admission assessments.
   **Output:** `group_identifier`, `assmt_dt`, `age`, `int_motivation`, `bps_*`, `drugs_of_choice`, etc.
 
 - **Substance Abuse History**  
-  Pulls structured tables of substance use: type and usage pattern.  
+  Pulls structured tables of substance use: type and usage pattern. This is part of the biopsychosocial assessment, but was developed separately to extract the table correctly.
   **Output:** One row per substance with `use_flag`, `pattern_of_use`, and normalized category.
 
 - **AHC HRSN Survey**  
@@ -46,7 +46,7 @@ Click **“Select Input Folder”** and choose the folder containing your PDF fi
 ---
 
 ### 4. **Select Output Folder**
-Click **“Select Output Folder”** to specify where your results should be saved.
+Click **“Select Output Folder”** to specify where your results should be saved. Ideally, this can be the same folder where the merged industry assessment CSVs are stored.
 
 ---
 
