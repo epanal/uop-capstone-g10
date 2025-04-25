@@ -1,6 +1,6 @@
 # Exist Centers PDF Parser App
 
-![rser_app/images/pdf_app.png](https://raw.githubusercontent.com/epanal/uop-capstone-g10/refs/heads/main/pdf_parsers/parser_app/images/pdf_app.png)
+![Image](https://github.com/user-attachments/assets/e8e61ca6-2813-4181-9486-5306f79b5335)
 
 ## 🔍 What This App Is
 
