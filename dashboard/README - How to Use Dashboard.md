@@ -13,11 +13,13 @@ This dashboard provides an interactive view of patient assessment data collected
 
 ## 🚀 Getting Started
 
-<p style="background-color: #fff3cd; padding: 10px; border-left: 6px solid #ffecb5;">
-  <strong>🚧 This section is still being updated once we figure out deployment!</strong>
-</p>
+  Primary Way:
 
-1. **Start the Dashboard**
+  **Using the website**
+
+  Alternate Way :
+  
+  **Start the Dashboard**
    - Run the main dashboard Python file:
      ```bash
      python app.py
