@@ -13,11 +13,13 @@ This dashboard provides an interactive view of patient assessment data collected
 
 ## 🚀 Getting Started
 
-<p style="background-color: #fff3cd; padding: 10px; border-left: 6px solid #ffecb5;">
-  <strong>🚧 This section is still being updated once we figure out deployment!</strong>
-</p>
+  Primary Way:
 
-1. **Start the Dashboard**
+  **Using the website**
+
+  Alternate Way :
+  
+  **Start the Dashboard**
    - Run the main dashboard Python file:
      ```bash
      python app.py
@@ -33,18 +35,13 @@ This dashboard provides an interactive view of patient assessment data collected
 
 ## 📁 Data Requirements
 
-<p style="background-color: #fff3cd; padding: 10px; border-left: 6px solid #ffecb5;">
-  <strong>🚧 This section is still being updated once we figure out deployment and how team will upload files!</strong>
-</p>
-
-This section outlines the two data preparation steps required for the dashboard to run properly.
+This section outlines the data preparation steps required for the dashboard to run properly with the most up to date data.
 
 ### 1️⃣ Download Patient Assessments CSV Data from Kipu
-
+Full tutorial for downloading the industry assessment CSVs is located here:[README - Downloading PDFs](https://github.com/epanal/uop-capstone-g10/blob/main/data_wrangling/README%20-%20Downloading%20Standardized%20Assessment%20Files.md)
 - Log into the Kipu dashboard and export assessment-related data for:
   - WHO, GAD, PHQ, PTSD, DERS
-- A future script will assist in transforming these exports to the correct format for dashboard usage.
-- Place the final CSVs into the folder defined by `data_directory` in `config.json`.
+- Run the assessment merge application to create CSV files for each of the industry standard assessment (contains all patients).
   
 ### 2️⃣ Download Patient Assessments PDF Data from Kipu 
 Full tutorial for downloading the PDFs is located here: [README - Downloading PDFs](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Downloading%20Assessment%20PDFs.md)
@@ -57,6 +54,8 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 - Select a client and click **Generate the PDF Package** to compile a partial casefile.
 - Once generated, go to the **Downloads** section (top-right) and save the PDF locally.
 - These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md))
+
+### 3️⃣ Upload Prepared CSVs to pythonanywhere.com
 
 ---
 
