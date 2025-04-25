@@ -56,7 +56,7 @@ Rename the downloaded CSV file using the following format:
 ## ⚠️ For Patients with Multiple MR#s (Multiple Programs)
 
   1. Navigate to the **Clients** tab in Kipu.
-  2. Use the **search bar** to enter the patient MR#.
+  2. Use the **search bar** to enter the patient name or MR#.
   3. Click on the appropriate patient profile.
   4. Navigate to the **MBOs** tab.
   5. Set the **Status** filter to **"Evaluated"**.
