@@ -37,13 +37,15 @@ This dashboard provides an interactive view of patient assessment data collected
 
 This section outlines the data preparation steps required for the dashboard to run properly with the most up to date data.
 
-### 1️⃣ Download Patient Assessments CSV Data from Kipu
-Full tutorial for downloading the industry assessment CSVs is located here:[README - Downloading PDFs](https://github.com/epanal/uop-capstone-g10/blob/main/data_wrangling/README%20-%20Downloading%20Standardized%20Assessment%20Files.md)
+### 1️⃣ Download Patient Standardized Assessments CSV Data from Kipu
+Full tutorial for downloading the industry assessment CSVs is located here: [README - Downloading Standarized Assessment Files](https://github.com/epanal/uop-capstone-g10/blob/main/data_wrangling/README%20-%20Downloading%20Standardized%20Assessment%20Files.md)
 - Log into the Kipu dashboard and export assessment-related data for:
-  - WHO, GAD, PHQ, PTSD, DERS
-- Run the assessment merge application to create CSV files for each of the industry standard assessment (contains all patients).
+  - WHO,  GAD,  PHQ,  PTSD,  DERS,  DERS2
+- Run the **Assessment Merger App** to create merged CSV files for each of the industry standard assessment (contains all patients). Full tutorial for using the Assessment Merger app is located here: [README - Assessment Merger App](https://github.com/epanal/uop-capstone-g10/blob/58-edit-dashboard-readme/data_wrangling/README%20-%20Merging%20Assessment%20CSVs.md)
+- Download the `clinical_data_report.csv` from Kipu (update the date range to include the desired time period prior to exporting).
+- Run the **Statistical Dataset Builder App** to combine the merged asssessment data files and clinical data report. Full tutorial for using the Statistical Builder app is located here: [README - Statistical Dataset Builder App](https://github.com/epanal/uop-capstone-g10/blob/58-edit-dashboard-readme/data_wrangling/README%20-%20Building%20Statistical%20Dataset.md)
   
-### 2️⃣ Download Patient Assessments PDF Data from Kipu 
+### 2️⃣ Download Patient Admissions Assessments PDF Data from Kipu 
 Full tutorial for downloading the PDFs is located here: [README - Downloading PDFs](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Downloading%20Assessment%20PDFs.md)
 - Log into the Kipu dashboard and export assessment-related data for:
   - PHP Daily Assessments
@@ -53,7 +55,7 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 - Navigate to the **Assessments** tab in the Kipu portal.
 - Select a client and click **Generate the PDF Package** to compile a partial casefile.
 - Once generated, go to the **Downloads** section (top-right) and save the PDF locally.
-- These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md))
+- These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md)
 
 ### 3️⃣ Upload Prepared CSVs to pythonanywhere.com
 
