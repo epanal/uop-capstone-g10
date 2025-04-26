@@ -17,7 +17,7 @@ Launch the app by double-clicking `assessment_merger.exe` (or running the `asses
 ---
 
 ### 2. **Choose a Assessment Type**
-Select one of the following options depending on which section or type of assessment from the partial casefile you would like to extract:
+Select one of the following options depending on which section or type of assessment you would like to extract:
 
 - **WHO**  (WHO-5 Assessment)
   
