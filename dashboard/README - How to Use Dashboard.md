@@ -13,13 +13,13 @@ This dashboard provides an interactive view of patient assessment data collected
 
 ## 🚀 Getting Started
 
-  Primary Way:
+  **Primary Way :**
+  - Using the website (replace 'xxxxxxxx' with your site name):
+    ```bash
+    https://xxxxxxxx.pythonanywhere.com/
+    ```
 
-  **Using the website**
-
-  Alternate Way :
-  
-  **Start the Dashboard**
+  **Alternate Way :**
    - Run the main dashboard Python file:
      ```bash
      python app.py
@@ -57,7 +57,21 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 - Once generated, go to the **Downloads** section (top-right) and save the PDF locally.
 - These PDFs will later be parsed using the **Exist PDF Parser App**, which anonymizes patient IDs based on their LO numbers. Full tutorial for using the PDF parsing app is located here: [README - PDF Parser App](https://github.com/epanal/uop-capstone-g10/blob/main/pdf_parsers/parser_app/README%20-%20Parsing%20Assessment%20PDFs%20to%20CSVs.md)
 
-### 3️⃣ Upload Prepared CSVs to pythonanywhere.com
+### 3️⃣ Upload Prepared CSVs to your PythonAnywhere website
+- Upload the CSV files into your PythonAnywhere data folder under the Files. All of these CSV files should be present
+```bash
+- ahcm_survey_output.csv
+- bps_anonimized.csv
+- ders2_merged.csv
+- ders_merged.csv
+- extracted_php_assessments.csv
+- gad_merged.csv
+- patient_substance_history.csv
+- phq_merged.csv
+- ptsd_merged.csv
+- stat_tests_data.csv
+- who_merged.csv
+```
 
 ---
 
@@ -105,6 +119,3 @@ Full tutorial for downloading the PDFs is located here: [README - Downloading PD
 - **Dynamic Visuals:** Many dropdowns automatically update available patients and features based on loaded data.
 
 ---
-<p style="background-color: #fff3cd; padding: 10px; border-left: 6px solid #ffecb5;">
-  <strong>🚧 Add more possible notes or sections!</strong>
-</p>
