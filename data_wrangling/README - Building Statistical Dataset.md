@@ -16,3 +16,15 @@ Launch the app by double-clicking `statistical_dataset_builder.exe` (or running 
 
 ---
 
+### 2. **Select Input Folder**
+Click “Select Input Folder” and choose the folder containing your merged data files that were created from the Assessment Merger App.
+
+---
+
+### 3. **Select Clinical Data Report (CSV)**
+Click “Select Clinical Data Report (CSV)” and choose the `clinical_data_report.csv` that was exported from Kipu.
+
+---
+
+### 4. **Select Output Folder**
+Click “Select Output Folder” to specify where your results should be saved.
