@@ -14,11 +14,16 @@ from assessmentThresholds import assessment_thresholds
 from ahcm_charts import generate_ahcm_barplot, generate_patient_summary_table
 import json
 import os
+import sys
 
-# Load configuration from config.json
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
-data_directory = config['data_directory']
+# base path of app.py
+base_path = os.path.dirname(os.path.abspath(__file__))
+
+# sys.path for module imports
+sys.path.append(base_path)
+
+# Set data directory relative to app.py location
+data_directory = os.path.join(base_path, "data")
 
 
 # Function to format date columns
